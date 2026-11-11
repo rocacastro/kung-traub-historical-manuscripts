@@ -18,3 +18,4 @@ The 44-page manuscript compiled on **17 September 2026 at 23:17 (Chile local tim
 [Source provenance and date records](PROVENANCE.md) · [SHA-256 file manifest](SHA256SUMS.txt) · [Integrity verification script](verify_sha256.py)
 
 The documents are historical research drafts submitted for mathematical scrutiny. Their inclusion records the content of the preserved versions and the available date evidence; it does not in itself establish independent verification of the proofs or a public dissemination date in September 2026.
+**Archived release (v1.0.0, 11 November 2026):** https://doi.org/10.5281/zenodo.24147519
