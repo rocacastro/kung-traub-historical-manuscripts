@@ -1,0 +1,3147 @@
+% Versión 3.3, elaborada sobre Manuscrito_Kung_Traub_v3_2_integrado.tex.
+% Definición operacional, representación exacta y separación de atribución.
+% Pruebas reexpresadas matemáticamente; no se declara una auditoría independiente.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{newtxtext,newtxmath}
+\usepackage{mathrsfs}
+\usepackage[a4paper,top=25mm,bottom=25mm,left=26mm,right=26mm]{geometry}
+\usepackage{microtype,enumitem,booktabs,longtable,array}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{lemma}[theorem]{Lema}
+\newtheorem{proposition}[theorem]{Proposición}
+\newtheorem{corollary}[theorem]{Corolario}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definición}
+\newtheorem{example}[theorem]{Ejemplo}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Observación}
+\newcommand{\R}{\mathbb R}
+\newcommand{\C}{\mathbb C}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Nn}{\mathbb N_0}
+\newcommand{\PP}{\mathcal P}
+\newcommand{\ER}{\mathcal E_{\R}}
+\newcommand{\QQ}{\mathcal Q}
+\newcommand{\DD}{\mathcal D}
+\newcommand{\Rec}{\mathcal R}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\hc}{\mathbf h}
+\newcommand{\ct}{\mathtt c}
+\newcommand{\st}{\mathtt s}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\spanop}{span}
+\DeclareMathOperator{\rank}{rango}
+\DeclareMathOperator{\Dom}{Dom}
+\DeclareMathOperator{\codim}{codim}
+\setlist[enumerate]{topsep=4pt,itemsep=3pt,parsep=0pt,leftmargin=*}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{3pt}
+\linespread{1.035}
+\setlength{\emergencystretch}{2.5em}
+\setlength{\headheight}{15pt}
+\widowpenalty=10000\clubpenalty=10000
+\allowdisplaybreaks[2]
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small Cota del orden y consultas escalares}
+\fancyhead[R]{\small Versión 3.3 · coste operacional}
+\fancyfoot[C]{\thepage}
+\hypersetup{pdftitle={La cota 2 elevado a d menos 1 para métodos escalares sin memoria},pdfsubject={Versión 3.3: evaluaciones utilizadas, coste operacional y representación exacta},pdfauthor={Manuscrito de trabajo}}
+\newcommand{\paso}[1]{\par\smallskip\noindent\textbf{#1}\quad}
+\begin{document}
+\begin{titlepage}
+\centering
+\vspace*{13mm}
+{\large MANUSCRITO DE TRABAJO\par}
+\vspace{13mm}
+{\LARGE\bfseries La cota $2^{d-1}$ para métodos\par escalares sin memoria\par}
+\vspace{9mm}
+{\Large Construcción de una función entera\par y coste operacional de una iteración\par}
+\vspace{10mm}
+{\large Versión 3.3\par}
+{\large Evaluaciones utilizadas y representación exacta\par}
+\vspace{6mm}
+{18 de septiembre de 2026\par}
+\vfill
+\begin{minipage}{0.91\textwidth}
+\textbf{Base.} Versión 3.2 del manuscrito. Se conserva el núcleo analítico, se reexpresan sus pruebas mediante pasos y ecuaciones, y se reconstruye la Sección~\ref{sec:KT}. Los cambios y la correspondencia se registran en el Apéndice~\ref{app:changes}.
+
+\textbf{Objeto.} Para un método sin memoria con a lo sumo $d$ consultas escalares por aplicación, el Teorema~\ref{thm:main} propone una construcción de una función entera que impide un exponente local superior a $2^{d-1}$.
+
+\textbf{Coste.} Una evaluación utilizada es una adquisición indexada en un cálculo fijo. Se distinguen coste total, perfil por derivadas, repetición de una consulta y reutilización de una respuesta. El Teorema~\ref{thm:exactrepresentation} conserva registro, salida y cuentas por orden.
+
+\textbf{Consecuencia.} El Corolario~\ref{cor:traub}, \emph{Conjetura Traub: formulación operacional}, aplica la cota al coste de la realización identificada. La comparación histórica se separa de la demostración matemática; no se elimina por definición una condición de representación.
+
+\textbf{Estado.} Demostración propuesta para revisión matemática. Esta edición no constituye una auditoría independiente del Teorema~\ref{thm:main} ni certifica una identificación universal con toda interpretación del coste de 1974.
+\end{minipage}
+\vspace*{8mm}
+\end{titlepage}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\section{Modelo de consultas y resultado principal}\label{sec:model}
+
+\subsection{Convenciones y resultados de base}
+Escribimos $\N=\{1,2,\ldots\}$ y $\Nn=\{0,1,2,\ldots\}$. Se consideran conocidos los conjuntos $\R$ y $\C$, las operaciones de cuerpo, las aplicaciones y sus dominios, los espacios vectoriales de dimensión finita, las matrices y los determinantes. Para conjuntos $A,B$, una aplicación $\Phi:A\to B$ asigna a cada $a\in A$ un único elemento $\Phi(a)\in B$. Se usan las nociones usuales de conjunto finito, cardinalidad, supremo e inducción sobre enteros. Para $k\in\Nn$, $k!=1\cdot2\cdots k$ si $k\ge1$ y $0!=1$. Una lista de longitud cero se denota por $()$; una suma vacía vale cero y un producto vacío vale uno.
+
+Una aplicación entre espacios vectoriales es \emph{lineal} si preserva sumas y multiplicación por escalares. Para una aplicación lineal $L:V\to W$, se definen su núcleo $\ker L=\{v\in V:L(v)=0\}$, su imagen $L(V)=\{L(v):v\in V\}$ y su rango $\dim L(V)$. Una base es una familia linealmente independiente que genera el espacio; su número de elementos es la dimensión. Para vectores de coeficientes en $\C^{n+1}$ se usa el producto interior $\langle u,v\rangle=\sum_{j=0}^n u_j\overline{v_j}$. Una familia es ortonormal si esos productos valen uno para un vector consigo mismo y cero para dos vectores distintos.
+
+Para un polinomio $H$, se denota por $[z^j]H$ el coeficiente de $z^j$. Para $0\le k\le n$, $\binom nk=n!/[k!(n-k)!]$. Como resultados de base se usan: el principio de buen orden de $\Nn$ (todo subconjunto no vacío tiene un menor elemento); el teorema de rango y nulidad ($\dim V=\dim\ker L+\dim L(V)$); la existencia de bases ortonormales en espacios con producto interior; la compacidad de conjuntos cerrados y acotados en dimensión finita y la existencia de subsucesiones convergentes en ellos; la existencia de máximos y mínimos de funciones continuas sobre compactos; la factorización de polinomios complejos en factores lineales; los teoremas del valor intermedio, del valor medio y fundamental del cálculo; y la continuidad de un límite uniforme de funciones continuas; y la diferenciación término a término de series de potencias en el interior de su disco de convergencia. Estos son los resultados elementales asumidos. Los resultados auxiliares específicos del argumento se demuestran en este documento.
+
+En la recta real, un entorno de $a$ será un intervalo $(a-\delta,a+\delta)$ con $\delta>0$, o un conjunto que contiene tal intervalo. Para una función real $f$ definida en un intervalo abierto $I$, se escribe
+\[
+f'(x)=\lim_{t\to0,\ t\in\R}\frac{f(x+t)-f(x)}{t}
+\]
+cuando el límite existe. Recursivamente, $f^{(0)}=f$ y $f^{(r+1)}=(f^{(r)})'$. La notación $f\in C^s(I)$ significa que estas derivadas existen y son continuas hasta el orden $s$; $C^\infty(I)$ significa que esto ocurre para todo $s\in\Nn$.
+
+Una función $f:I\to\R$ es \emph{real analítica} si para cada $a\in I$ existen $\rho>0$ y coeficientes reales $b_j$ tales que $(a-\rho,a+\rho)\subset I$ y
+\[
+f(a+t)=\sum_{j=0}^{\infty}b_jt^j\qquad(|t|<\rho).
+\]
+Una función $F:\C\to\C$ es \emph{entera} si para cada $a\in\C$ admite una representación análoga mediante una serie de potencias convergente en un disco $|z-a|<\rho$. Sus derivadas complejas se definen mediante el mismo cociente incremental con incrementos complejos. La diferenciación de series de potencias asegura la existencia de todas ellas. Se define
+\[
+\ER=\{F:\C\to\C:F\text{ es entera y }F(\R)\subseteq\R\}.
+\]
+
+\begin{lemma}[Realidad de las derivadas]\label{lem:real}
+Si $F\in\ER$, entonces $F^{(r)}(x)\in\R$ para todo $x\in\R$ y $r\in\Nn$. La restricción $F|_\R$ es real analítica, pertenece a $C^\infty(\R)$ y sus derivadas reales coinciden con las restricciones de las derivadas complejas.
+\end{lemma}
+\begin{proof}
+\paso{1. Inducción en el orden.}
+Para $r=0$, $F(\R)\subseteq\R$. Si $F^{(r)}(\R)\subseteq\R$, entonces, para $x\in\R$,
+\[
+\frac{F^{(r)}(x+t)-F^{(r)}(x)}t\in\R\quad(t\in\R\setminus\{0\}),
+\]
+\[
+F^{(r+1)}(x)=\lim_{t\to0,\ t\in\R}
+\frac{F^{(r)}(x+t)-F^{(r)}(x)}t\in\R,
+\]
+porque existe el límite complejo y $\R$ es cerrado en $\C$. La misma igualdad identifica la derivada de la restricción real con la restricción de la derivada compleja. Por inducción,
+\[
+F^{(r)}(x)\in\R,\qquad (F|_\R)^{(r)}(x)=F^{(r)}(x)\quad(r\in\Nn).
+\]
+\paso{2. Serie real.}
+Para $a\in\R$ y un disco de convergencia local,
+\[
+F(a+z)=\sum_{j\ge0}\frac{F^{(j)}(a)}{j!}z^j,
+\qquad \frac{F^{(j)}(a)}{j!}\in\R.
+\]
+Restringir $z$ a incrementos reales da analiticidad real. La diferenciación término a término da continuidad de cada derivada y pertenencia a $C^\infty(\R)$.
+\end{proof}
+
+Una \emph{raíz} de una función real $f$ es un punto $\alpha$ de su dominio con $f(\alpha)=0$. Si además la derivada existe y $f'(\alpha)\ne0$, se llama \emph{raíz simple}. Si se elige una raíz entre varias, se denomina \emph{raíz distinguida}; la elección pertenece al problema estudiado y no es un dato disponible para el método.
+
+Para $n\in\Nn$ y $\mathbb K\in\{\R,\C\}$ se define
+\[
+\PP_n(\mathbb K)=\left\{\sum_{j=0}^na_jz^j:a_j\in\mathbb K\right\},\qquad
+\norm{P}_{\mathrm{coef}}=\left(\sum_{j=0}^n|a_j|^2\right)^{1/2}.
+\]
+Para $P\ne0$, su \emph{grado} es el mayor índice con coeficiente no nulo; ese coeficiente es el \emph{coeficiente principal}. El polinomio es \emph{mónico} si el coeficiente principal es uno. Se escribe $A\mid B$ si existe un polinomio $C$ tal que $B=AC$. Un \emph{cero} de $P$ es un punto $a$ con $P(a)=0$. Para $P\ne0$, ese cero tiene \emph{multiplicidad} $m\ge1$ si $P(z)=(z-a)^mQ(z)$ con $Q(a)\ne0$. Contar ceros con multiplicidad significa repetir cada cero tantas veces como indica ese entero.
+
+Para $R>0$ se define
+\[
+K_R=\{z\in\C:|z|\le R\},\qquad
+\norm{h}_R=\max_{z\in K_R}|h(z)|
+\]
+si $h$ es continua en $K_R$. El máximo existe por compacidad. Convergencia uniforme en $K_R$ significa $\norm{h_m-h}_R\to0$; convergencia uniforme en discos compactos significa esta propiedad para cada $R>0$. Para $Z\subseteq\C$,
+\[
+\dist(a,Z)=\inf_{z\in Z}|a-z|,\qquad \dist(a,\varnothing)=+\infty.
+\]
+
+\subsection{Reglas, consultas y respuestas}
+\begin{definition}[Regla total y regla parcial]\label{def:rule}
+Dados conjuntos $X,Y$, una \emph{regla de datos} de $X$ en $Y$ es una aplicación $\Phi:D_\Phi\to Y$, con un dominio especificado $D_\Phi\subseteq X$. Es \emph{total sobre $X$} si $D_\Phi=X$ y \emph{parcial propia} si $D_\Phi\ne X$. La expresión \emph{regla parcial} permite ambos casos. No se exige apertura del dominio, continuidad de la aplicación ni un algoritmo que decida la pertenencia a su dominio.
+\end{definition}
+
+\begin{definition}[Consulta y respuesta]\label{def:query}
+Se define el \emph{conjunto de consultas} por $\QQ=\R\times\Nn$. Un elemento $q=(z,r)\in\QQ$ se llama \emph{consulta}; $z$ es su \emph{nodo} y $r$ su \emph{orden de derivación}.
+
+Para $f\in C^\infty(I_f)$, con $I_f\subseteq\R$ un intervalo abierto, se define la aplicación
+\[
+E_f:\QQ_f\to\R,\qquad
+\QQ_f=I_f\times\Nn,\qquad E_f(z,r)=f^{(r)}(z).
+\]
+El escalar $E_f(q)$ se llama \emph{respuesta} a $q$; sólo está definido para $q\in\QQ_f$. Para $F\in\ER$ se usa su restricción real y $\QQ_F=\QQ$, por el Lema~\ref{lem:real}. El triple $(z,r,E_f(z,r))$ se llama \emph{consulta respondida}.
+\end{definition}
+
+Se cuenta una unidad por cada aparición de una consulta en la lista efectivamente realizada. Por tanto, solicitar dos veces el mismo par $(z,r)$ cuenta dos veces, mientras que usar de nuevo una respuesta ya incluida en los datos no crea otra consulta. Este conteo no mide operaciones aritméticas ni el coste de calcular una derivada de orden alto.
+
+\subsection{Datos y reglas de consulta o de salida}
+Para $k\in\Nn$ se define $H_k=\R^{k+1}$. Sus elementos
+\[
+\hc_k=(x,\eta_1,\ldots,\eta_k)
+\]
+se llaman \emph{vectores de datos de nivel $k$}. Para $i\le k$, su \emph{prefijo de nivel $i$} es
+\[
+\pi_i\hc_k=(x,\eta_1,\ldots,\eta_i)\in H_i.
+\]
+Se identifica $\hc_0=(x)$ con $x$ cuando no haya ambigüedad.
+
+Se fijan dos etiquetas distintas $\ct,\st$. Se definen los conjuntos disjuntos
+\[
+\mathcal A_c=\{\ct\}\times\QQ,\qquad
+\mathcal A_s=\{\st\}\times\R,\qquad
+\mathcal A=\mathcal A_c\cup\mathcal A_s.
+\]
+Un elemento $(\ct,q)$ se llama \emph{decisión de consulta} y determina el par $q\in\QQ$. Un elemento $(\st,a)$ se llama \emph{decisión de salida} y determina el escalar $a$. Estos nombres designan únicamente los elementos de los conjuntos anteriores. En particular, cada decisión de consulta especifica un único par y cada decisión de salida especifica un único número real.
+
+\begin{definition}[Método con presupuesto $d$]\label{def:method}
+Un \emph{método determinista, causal y sin memoria con presupuesto $d$} es una tupla
+\[
+T=\bigl(d,(D_k)_{k=0}^{d},(\Phi_k)_{k=0}^{d}\bigr),\qquad d\in\N,
+\]
+con
+\begin{align*}
+&D_k\subseteq H_k,\quad \Phi_k:D_k\to\mathcal A &&(0\le k<d),\\
+&D_d\subseteq H_d,\quad \Phi_d:D_d\to\mathcal A_s.&
+\end{align*}
+Los conjuntos y las aplicaciones de la tupla se fijan para toda la clase de funciones. No dependen de la función concreta $f$.
+
+El término \emph{determinista} significa aquí que cada dato del dominio de una regla tiene una sola imagen. El término \emph{causal} significa que la decisión en el nivel $k$ es $\Phi_k(x,\eta_1,\ldots,\eta_k)$, sin argumentos posteriores. La expresión \emph{sin memoria} significa que una nueva aplicación del método sólo recibe el nuevo número $x$; los datos de anteriores aplicaciones no se añaden a $H_0$ ni a $H_k$.
+
+El método es \emph{total} si $D_k=H_k$ para $0\le k\le d$. En otro caso es un método de reglas parcialmente definidas.
+\end{definition}
+
+La tupla no recibe la fórmula de $f$, sus coeficientes, su raíz ni una operación dependiente de información no consultada. Se permiten constantes fijas independientes de $f$ dentro de las reglas. No se exige computabilidad de esas reglas abstractas.
+
+\subsection{Ejecuciones definidas mediante ecuaciones}
+\begin{definition}[Prefijo admisible]\label{def:prefix}
+Sean $T$ como en la Definición~\ref{def:method}, $f\in C^\infty(I_f)$ y $x\in\R$. Para $0\le k\le d$, una lista
+\[
+\Rec_k=((z_j,r_j,\eta_j))_{j=1}^{k}
+\]
+es un \emph{prefijo admisible de longitud $k$} si, poniendo $q_j=(z_j,r_j)$ y $\hc_i=(x,\eta_1,\ldots,\eta_i)$, se cumplen
+\begin{equation}\label{eq:prefix}
+\hc_i\in D_i,\quad
+\Phi_i(\hc_i)=(\ct,q_{i+1}),\quad
+q_{i+1}\in\QQ_f,\quad
+\eta_{i+1}=E_f(q_{i+1})\quad(0\le i<k).
+\end{equation}
+La lista vacía $()$ es el prefijo admisible de longitud cero.
+\end{definition}
+
+\begin{definition}[Ejecución válida, salida y terminación]\label{def:execution}
+Una \emph{ejecución válida} de $T$ sobre $f$ desde $x$ es un par $(\Rec_k,a)$, donde $\Rec_k$ es un prefijo admisible y
+\begin{equation}\label{eq:exit}
+\hc_k\in D_k,\qquad \Phi_k(\hc_k)=(\st,a).
+\end{equation}
+Se llama \emph{registro} a $\Rec_k$, \emph{salida} al número $a$, y \emph{número de consultas} a $k$. La frase \emph{la ejecución termina después de $k$ consultas con salida $a$} significa exactamente \eqref{eq:prefix} y \eqref{eq:exit}. No se añade una instrucción matemática distinta.
+
+Una aplicación sobre $(f,x)$ se llama \emph{indefinida} si no existe ningún par que satisfaga esas condiciones. La indisponibilidad de $E_f(q)$ no proporciona un dato alternativo ni una señal utilizable por las reglas.
+\end{definition}
+
+\begin{lemma}[Unicidad de prefijos y ejecuciones]\label{lem:unique}
+Para $T,f,x$ fijos hay a lo sumo un prefijo admisible de cada longitud y a lo sumo una ejecución válida.
+\end{lemma}
+\begin{proof}
+\paso{1. Prefijos.}
+La única lista de longitud cero es $()$. Si dos prefijos coinciden hasta el índice $j$,
+\[
+\hc_j=\hc_j'\Longrightarrow\Phi_j(\hc_j)=\Phi_j(\hc_j')
+\Longrightarrow q_{j+1}=q_{j+1}'
+\Longrightarrow E_f(q_{j+1})=E_f(q_{j+1}').
+\]
+Por tanto $\hc_{j+1}=\hc_{j+1}'$. La inducción prueba unicidad para cada longitud.
+\paso{2. Ejecuciones.}
+Si dos ejecuciones tienen longitudes $k<\ell$, sus prefijos de longitud $k$ coinciden y
+\[
+\Phi_k(\hc_k)\in\mathcal A_s\cap\mathcal A_c=\varnothing,
+\]
+contradicción. Así las longitudes son iguales. En ese último nivel,
+\[
+\Phi_k(\hc_k)=(\st,a)=(\st,a')\Longrightarrow a=a'.
+\]
+\end{proof}
+
+Por el lema se pueden definir, sin ambigüedad,
+\[
+\Omega_{T,f}=\{x:\text{existe una ejecución válida sobre }(f,x)\},\qquad
+T_f:\Omega_{T,f}\to\R,
+\]
+mediante $T_f(x)=a$, y $\nu_{T,f}(x)=k$. Una \emph{iteración} significa una aplicación de $T_f$; cuando $x_{n+1}=T_f(x_n)$ está definido para todo $n$, esta sucesión se llama \emph{trayectoria}. Por definición, $0\le\nu_{T,f}(x)\le d$.
+
+\begin{proposition}[Existencia para métodos totales]\label{prop:total}
+Si $T$ es total y $F\in\ER$, entonces $\Omega_{T,F}=\R$.
+\end{proposition}
+\begin{proof}
+Fíjese $x\in\R$.
+\paso{1. Nivel inicial.}
+\[
+\hc_0=(x)\in H_0=D_0,
+\quad\Phi_0(\hc_0)\in\mathcal A_s\cup\mathcal A_c.
+\]
+Una imagen en $\mathcal A_s$ satisface \eqref{eq:exit}. Una imagen $(\ct,q_1)$ permite definir $\eta_1=E_F(q_1)$, porque $\QQ_F=\QQ$, y produce un prefijo de longitud uno.
+\paso{2. Inducción.}
+Para un prefijo de longitud $k<d$,
+\[
+\hc_k\in H_k=D_k\Longrightarrow
+\begin{cases}
+\Phi_k(\hc_k)=(\st,a)\Rightarrow (\Rec_k,a)\text{ es ejecución},\\
+\Phi_k(\hc_k)=(\ct,q)\Rightarrow q\in\QQ_F,\ E_F(q)\in\R
+\Rightarrow\text{prefijo de longitud }k+1.
+\end{cases}
+\]
+\paso{3. Último nivel.}
+Si no hubo salida antes de $d$, existe $\Rec_d$ y
+\[
+\hc_d\in H_d=D_d,\qquad \Phi_d(\hc_d)\in\mathcal A_s.
+\]
+Por \eqref{eq:exit} existe salida también en ese caso. Como $x$ es arbitrario, $\Omega_{T,F}=\R$.
+\end{proof}
+
+\begin{example}[Newton como método parcial]\label{ex:newton}
+Tómese $d=2$, $D_0=\R$, $D_1=\R^2$ y
+\[
+D_2=\{(x,\eta_1,\eta_2)\in\R^3:\eta_2\ne0\}.
+\]
+Se definen
+\[
+\Phi_0(x)=(\ct,(x,0)),\quad
+\Phi_1(x,\eta_1)=(\ct,(x,1)),\quad
+\Phi_2(x,\eta_1,\eta_2)=\left(\st,x-\frac{\eta_1}{\eta_2}\right).
+\]
+Las ecuaciones \eqref{eq:prefix} dan $\eta_1=f(x)$, $\eta_2=f'(x)$. La ecuación \eqref{eq:exit} exige $f'(x)\ne0$ y da $T_f(x)=x-f(x)/f'(x)$. Por tanto se realizan dos consultas en un solo nodo. No se afirma aquí una propiedad de convergencia.
+\end{example}
+
+\subsection{Conservación de datos y completado del presupuesto}
+Una función $g$ es \emph{compatible con la lista} $\Rec_k=((z_j,r_j,\eta_j))_{j=1}^k$ si $(z_j,r_j)\in\QQ_g$ y $E_g(z_j,r_j)=\eta_j$ para cada $j$. Para dos funciones, \emph{coincidir sobre la lista} significa que ambas son compatibles con ella.
+
+\begin{lemma}[Conservación exacta]\label{lem:preserve}
+Si $\Rec_k$ es un prefijo admisible sobre $(f,x)$ y $g$ es compatible con él, el mismo prefijo es admisible sobre $(g,x)$. Si además $(\Rec_k,a)$ es una ejecución sobre $(f,x)$, lo es sobre $(g,x)$ y $T_g(x)=a=T_f(x)$.
+\end{lemma}
+\begin{proof}
+\paso{1. Datos iniciales.}
+\[
+\hc_0^g=(x)=\hc_0^f.
+\]
+\paso{2. Paso inductivo.}
+Para $i<k$, la admisibilidad y la compatibilidad dan
+\[
+\hc_i^f\in D_i,\quad\Phi_i(\hc_i^f)=(\ct,q_{i+1}),\quad
+q_{i+1}\in\QQ_g,\quad E_g(q_{i+1})=\eta_{i+1}.
+\]
+Por tanto
+\begin{align*}
+\hc_i^g=\hc_i^f
+&\Longrightarrow \hc_i^g\in D_i,\quad\Phi_i(\hc_i^g)=\Phi_i(\hc_i^f),\\
+&\Longrightarrow\hc_{i+1}^g=(\hc_i^g,\eta_{i+1})
+=(\hc_i^f,\eta_{i+1})=\hc_{i+1}^f.
+\end{align*}
+La inducción verifica \eqref{eq:prefix} para todo el registro sobre $g$.
+\paso{3. Salida.}
+\[
+\Phi_k(\hc_k^f)=(\st,a),\quad\hc_k^g=\hc_k^f
+\Longrightarrow\Phi_k(\hc_k^g)=(\st,a)
+\Longrightarrow T_g(x)=a=T_f(x).
+\]
+Sólo se ha usado igualdad de argumentos, no continuidad de las reglas.
+\end{proof}
+
+\begin{lemma}[Exactamente $d$ consultas sin cambiar la salida]\label{lem:padding}
+Para cada método total $T$ con presupuesto $d$ existe otro método total $\widehat T$ con el mismo presupuesto tal que
+\[
+\nu_{\widehat T,F}(x)=d,\qquad \widehat T_F(x)=T_F(x)
+\quad(F\in\ER,\ x\in\R).
+\]
+\end{lemma}
+\begin{proof}
+\paso{1. Reglas.}
+Para $\hc_k\in H_k$, defínanse
+\[
+J(\hc_k)=\{i\le k:\Phi_i(\pi_i\hc_k)\in\mathcal A_s\},\qquad
+s(\hc_k)=\min J(\hc_k)\quad(J(\hc_k)\ne\varnothing).
+\]
+Para $k<d$,
+\[
+\widehat\Phi_k(\hc_k)=
+\begin{cases}\Phi_k(\hc_k),&J(\hc_k)=\varnothing,\\
+(\ct,(x,0)),&J(\hc_k)\ne\varnothing.
+\end{cases}
+\]
+Además
+\[
+J(\hc_k)=\varnothing\Longrightarrow\Phi_k(\hc_k)\notin\mathcal A_s,
+\qquad d\in J(\hc_d).
+\]
+Por tanto están definidas en todo su espacio las aplicaciones anteriores y
+\[
+\widehat\Phi_d(\hc_d)=\Phi_{s(\hc_d)}(\pi_{s(\hc_d)}\hc_d)\in\mathcal A_s.
+\]
+Sus primeras $d$ reglas sólo tienen imágenes de consulta. Por la Proposición~\ref{prop:total}, $\nu_{\widehat T,F}(x)=d$.
+\paso{2. Identidad hasta la salida original.}
+Sea $k=\nu_{T,F}(x)$. Para $i<k$,
+\[
+\Phi_i(\hc_i)\in\mathcal A_c,\quad J(\hc_i)=\varnothing,
+\quad\widehat\Phi_i(\hc_i)=\Phi_i(\hc_i).
+\]
+La inducción sobre $i$ identifica las primeras $k$ consultas y respuestas. En el nivel $k$,
+\[
+\Phi_k(\hc_k)=(\st,T_F(x)),\qquad
+\Phi_i(\hc_i)\notin\mathcal A_s\ (i<k).
+\]
+\paso{3. Último nivel.}
+Añadir respuestas no altera esos prefijos. Luego, en la ejecución completada,
+\[
+s(\hc_d)=k,\qquad
+\widehat\Phi_d(\hc_d)=\Phi_k(\pi_k\hc_d)=(\st,T_F(x)).
+\]
+Por la definición de salida, $\widehat T_F(x)=T_F(x)$. El argumento incluye $k=0$ y $k=d$.
+\end{proof}
+
+\subsection{Orden local y enunciado objetivo}
+\begin{definition}[Orden local al menos $p$]\label{def:order}
+Sea $\mathcal F$ una clase de funciones $f\in C^\infty(I_f)$ con raíces simples distinguidas $\alpha_f$, y sea $p>0$. Se dice que $T$ tiene \emph{orden local al menos $p$} en esa clase si
+\begin{equation}\label{eq:local}
+\begin{gathered}
+\forall f\in\mathcal F\ \exists C_f>0\ \exists\delta_f>0\ \forall x\in\R,\\
+0<|x-\alpha_f|<\delta_f\ \Longrightarrow\
+\left\{\begin{aligned}
+&x\in\Omega_{T,f},\\
+&|T_f(x)-\alpha_f|\le C_f|x-\alpha_f|^p.
+\end{aligned}\right.
+\end{gathered}
+\end{equation}
+Se llama \emph{entorno perforado} al conjunto $\{x:0<|x-\alpha_f|<\delta_f\}$. Las constantes se eligen después de $f$, no después de $x$.
+\end{definition}
+
+El resultado que se demostrará en el Teorema~\ref{thm:main} es el siguiente: dados $d\ge1$, $q=2^{d-1}$, un método total $T$ y un real $p>q$, existen $F\in\ER$, $\alpha\in(-1/2,1/2)$ y $x_m\ne\alpha$ tales que
+\begin{equation}\label{eq:objective}
+\begin{gathered}
+F(\alpha)=0,\qquad F'(u)>\tfrac12\quad(-1\le u\le1),\\
+x_m\to\alpha,\qquad
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\longrightarrow+\infty.
+\end{gathered}
+\end{equation}
+Esta es únicamente la formulación del objetivo. No se usa como premisa de los lemas que lo demuestran. La función, la raíz y la sucesión se eligen para $T,d,p$ fijos; una elección simultánea para todos los $p>q$ se demostrará separadamente en el Apéndice~\ref{app:allp}.
+
+\clearpage
+\section{Polinomios y concentración de sus ceros}\label{sec:polys}
+
+\subsection{División y normalización}
+\begin{lemma}[División por polinomios mónicos]\label{lem:division}
+Sean $0\le k\le n$, $h_j\in\PP_n(\C)$ y $R_j$ mónicos de grado $k$. Supóngase que sus coeficientes convergen a los de $h$ y $R$, respectivamente, y que $R_j\mid h_j$ para todo $j$. Entonces $R$ es mónico de grado $k$ y $R\mid h$.
+\end{lemma}
+\begin{proof}
+\paso{1. División algebraica.}
+Escríbase
+\[
+R_j(z)=z^k+\sum_{i<k}b_{i,j}z^i.
+\]
+Al eliminar un término $c z^s$, $s\ge k$, se reemplaza el dividendo parcial $H$ por
+\[
+H-cz^{s-k}R_j.
+\]
+Cada nuevo coeficiente se obtiene por sumas y productos de los coeficientes anteriores y de los $b_{i,j}$. Tras los grados $n,n-1,\ldots,k$, cada coeficiente del cociente $Q_j$ y del resto $S_j$ es un polinomio en los coeficientes de $h_j,R_j$.
+\paso{2. Límite.}
+La convergencia de esos coeficientes implica
+\[
+Q_j\longrightarrow Q,\qquad S_j\longrightarrow S,\qquad
+h=RQ+S,\quad \deg S<k,
+\]
+donde $Q,S$ son el cociente y el resto de la misma división aplicada a $h,R$. Como
+\[
+R_j\mid h_j\Longrightarrow S_j=0\Longrightarrow S=0,
+\]
+se obtiene $h=RQ$, es decir, $R\mid h$. Si $h=0$, la identidad vale con $Q=0$.
+\end{proof}
+
+\begin{lemma}[Valor de un polinomio normalizado]\label{lem:value}
+Sea $Q\ne0$ de grado $n\ge1$. Para $u\in\R$, escribamos
+\[
+Q(u+w)=\sum_{\nu=0}^na_\nu w^\nu,\qquad
+\max_{0\le\nu\le n}|a_\nu|=1.
+\]
+Si $\beta_1,\ldots,\beta_n$ son sus ceros en la variable $w$, contados con multiplicidad, entonces
+\begin{equation}\label{eq:value}
+|Q(u)|\ge 2^{-n}\prod_{i=1}^{n}\min(1,|\beta_i|).
+\end{equation}
+Para un polinomio constante con la misma normalización, $|Q(u)|=1$.
+\end{lemma}
+\begin{proof}
+\paso{1. Coeficientes.}
+Por factorización,
+\[
+Q(u+w)=a_n\prod_{i=1}^n(w-\beta_i).
+\]
+Si $e_k(\beta)$ denota la suma de productos de $k$ raíces distintas, entonces
+\[
+a_{n-k}=(-1)^ka_ne_k(\beta),\qquad
+|e_k(\beta)|\le\sum_{|S|=k}\prod_{i\in S}|\beta_i|.
+\]
+De $\max_k|a_k|=1$ resulta
+\[
+1\le |a_n|\sum_{S\subseteq\{1,\ldots,n\}}\prod_{i\in S}|\beta_i|
+=|a_n|\prod_{i=1}^n(1+|\beta_i|).
+\]
+\paso{2. Valor en el centro.}
+\[
+|Q(u)|=|a_n|\prod_i|\beta_i|
+\ge\prod_i\frac{|\beta_i|}{1+|\beta_i|}.
+\]
+Para $b\ge0$,
+\[
+\frac b{1+b}\ge
+\begin{cases}b/2,&0\le b\le1,\\1/2,&b\ge1,
+\end{cases}
+\quad=\frac12\min\{1,b\}.
+\]
+Multiplicar estas desigualdades da \eqref{eq:value}, también si algún factor es cero. Para grado cero, $|Q(u)|=|a_0|=1$.
+\end{proof}
+
+\subsection{Wronskianos de espacios polinómicos}
+\begin{definition}[Wronskiano]\label{def:wronskian}
+Sea $V\subseteq\PP_n(\C)$ un subespacio de dimensión $k\ge1$ y sea $\boldsymbol v=(v_1,\ldots,v_k)$ una base ordenada. Su \emph{wronskiano} es el polinomio
+\[
+W_{\boldsymbol v}(z)=\det\bigl[v_i^{(r-1)}(z)\bigr]_{r,i=1}^k.
+\]
+Una vez probado el lema siguiente, se escribirá $W_V$ cuando sólo interesen sus ceros; cuando se consideren coeficientes o límites, se fijará una base concreta.
+\end{definition}
+
+\begin{lemma}[No anulación y grado del wronskiano]\label{lem:wronskian}
+El polinomio $W_{\boldsymbol v}$ no es idénticamente cero. Dos bases de $V$ producen wronskianos que difieren por un factor constante no nulo. Existe una base de grados distintos $n_1<\cdots<n_k$, y
+\begin{equation}\label{eq:wdegree}
+\deg W_V=\sum_{i=1}^k n_i-\frac{k(k-1)}2
+\le k(n-k+1).
+\end{equation}
+Además,
+\begin{equation}\label{eq:wconstant}
+W_V\text{ es constante no nulo}\quad\Longleftrightarrow\quad
+V=\PP_{k-1}(\C).
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Cambio de base.}
+Si $\widetilde v_i=\sum_jv_jA_{ji}$ y $A$ es invertible, entonces
+\[
+[\widetilde v_i^{(r-1)}]_{r,i}=[v_i^{(r-1)}]_{r,i}A
+\Longrightarrow W_{\widetilde{\boldsymbol v}}=(\det A)W_{\boldsymbol v},\quad\det A\ne0.
+\]
+\paso{2. Grados distintos.}
+Para un subespacio no nulo $U\subseteq\PP_n$, sea $s=\max\{\deg v:0\ne v\in U\}$ y sea $\lambda_s:U\to\C$ el funcional que extrae el coeficiente de $z^s$. Entonces
+\[
+\lambda_s\ne0,\quad\dim\ker\lambda_s=\dim U-1,\quad
+0\ne v\in\ker\lambda_s\Longrightarrow\deg v<s.
+\]
+Elíjase $v_s\in U$ con $\lambda_s(v_s)\ne0$. Se tiene
+\[
+U=\{a v_s+w:a\in\C,\ w\in\ker\lambda_s\},\qquad\{a v_s:a\in\C\}\cap\ker\lambda_s=\{0\},
+\]
+porque $u-\lambda_s(u)v_s/\lambda_s(v_s)\in\ker\lambda_s$. La inducción en $\dim U$ produce una base de grados distintos; ordenándola, $n_1<\cdots<n_k$.
+\paso{3. Término principal.}
+Escríbase $v_i(z)=c_iz^{n_i}+\text{términos de menor grado}$, $c_i\ne0$. Defínanse
+\[
+(s)_0=1,\qquad(s)_r=s(s-1)\cdots(s-r+1)\quad(r\ge1),
+\quad D=\sum_i n_i-\frac{k(k-1)}2.
+\]
+La expansión del determinante da
+\[
+\deg W_V\le D,\qquad [z^D]W_V
+=\left(\prod_i c_i\right)\det[(n_i)_{r-1}]_{r,i=1}^k.
+\]
+Aquí $[z^D]$ significa el coeficiente de $z^D$. Como $(s)_r$ es mónico de grado $r$, las operaciones triangulares de filas dan
+\[
+\det[(n_i)_{r-1}]_{r,i}=\det[n_i^{r-1}]_{r,i}.
+\]
+Denótese el último determinante por $\Delta_k(n_1,\ldots,n_k)$. Como polinomio en $n_k$,
+\[
+\deg_{n_k}\Delta_k\le k-1,\quad
+\Delta_k(n_1,\ldots,n_{k-1},n_i)=0\ (i<k),
+\]
+\[
+[n_k^{k-1}]\Delta_k=\Delta_{k-1}.
+\]
+La factorización y $\Delta_1=1$ implican por inducción
+\[
+\Delta_k=\Delta_{k-1}\prod_{i<k}(n_k-n_i)
+=\prod_{i<j}(n_j-n_i)\ne0.
+\]
+Luego $W_V\ne0$ y $\deg W_V=D$.
+\paso{4. Cota y caso constante.}
+\[
+\sum_i n_i\le\sum_{i=0}^{k-1}(n-i)=kn-\frac{k(k-1)}2
+\Longrightarrow\deg W_V\le k(n-k+1).
+\]
+Además $n_i\ge i-1$, de donde
+\[
+\deg W_V=0\Longleftrightarrow n_i=i-1\ (1\le i\le k)
+\Longrightarrow V\subseteq\PP_{k-1},\quad\dim V=k=\dim\PP_{k-1}
+\Longrightarrow V=\PP_{k-1}.
+\]
+Recíprocamente, la base $1,z,\ldots,z^{k-1}$ de $\PP_{k-1}$ tiene wronskiano $\prod_{i=0}^{k-1}i!\ne0$. El paso 1 conserva la conclusión en cualquier base.
+\end{proof}
+
+\subsection{Concentración uniforme de ceros}
+\begin{lemma}[Concentración de ceros]\label{lem:concentration}
+Para cada par $1\le k\le n$ existe $C_{n,k}\ge1$ tal que: si $V\subseteq\PP_n(\C)$ tiene dimensión $k$, $a\in\C$, $\delta\ge0$ y algún $h\in V\setminus\{0\}$ tiene al menos $k$ ceros con multiplicidad en $|z-a|\le\delta$, entonces $W_V$ tiene un cero $\zeta$ con
+\begin{equation}\label{eq:concentration}
+|\zeta-a|\le C_{n,k}\delta.
+\end{equation}
+La constante no depende de $V,h,a,\delta$.
+\end{lemma}
+\begin{proof}
+\paso{1. Radio cero.}
+Si $\delta=0$, escríbase $h=\sum_i\lambda_iv_i\ne0$. Entonces
+\[
+h^{(r)}(a)=0\ (0\le r<k)
+\Longrightarrow [v_i^{(r-1)}(a)]_{r,i}\lambda=0,\quad\lambda\ne0
+\Longrightarrow W_V(a)=0.
+\]
+\paso{2. Cambio de variable.}
+Para $\delta>0$, $h(z)\mapsto h(a+\delta w)$ es lineal e invertible. La regla de derivación da
+\[
+W_{\rm transformado}(w)=\delta^{k(k-1)/2}W_V(a+\delta w).
+\]
+Así basta probar el caso $a=0$, $\delta=1$.
+\paso{3. Negación.}
+Si no existe una cota finita, para cada $\ell\in\N$ existen $V_\ell,h_\ell$ tales que
+\[
+\dim V_\ell=k,\quad0\ne h_\ell\in V_\ell,\quad
+h_\ell\text{ tiene }k\text{ ceros en }K_1,
+\quad W_{V_\ell}(z)\ne0\quad(z\in K_\ell).
+\]
+\paso{4. Bases y límite.}
+Sean $B_\ell\in\C^{(n+1)\times k}$ las matrices de bases ortonormales de coeficientes. Con $B^*$ denotando transposición conjugada,
+\[
+B_\ell^*B_\ell=I_k,\quad
+\{B:B^*B=I_k\}\text{ cerrado y acotado}
+\Longrightarrow B_{\ell_j}\to B,\quad B^*B=I_k.
+\]
+Renúmbrese la subsucesión; los radios originales satisfacen $\ell_j\ge j$, por lo que, después de renumerar, el wronskiano del índice $j$ sigue sin ceros en $K_j$. Las columnas de $B$ generan $V$, $\dim V=k$. La derivación y el determinante son polinomiales en coeficientes, de donde
+\[
+W_\ell\to W_V\quad\text{en coeficientes},\qquad W_V\ne0
+\]
+por el Lema~\ref{lem:wronskian}.
+\paso{5. Coeficientes no constantes.}
+Con $L=k(n-k+1)$,
+\[
+W_\ell(z)=b_{0,\ell}\prod_{s=1}^{a_\ell}\left(1-\frac z{\zeta_{s,\ell}}\right),
+\qquad a_\ell\le L,\quad |\zeta_{s,\ell}|>\ell.
+\]
+El producto vacío cubre el caso constante. Los $b_{0,\ell}$ convergen y están acotados. Para $1\le r\le L$,
+\[
+|[z^r]W_\ell|\le |b_{0,\ell}|\binom Lr\ell^{-r}\longrightarrow0.
+\]
+Por tanto $W_V$ es constante no nulo y, por \eqref{eq:wconstant},
+\[
+V=\PP_{k-1}(\C).
+\]
+\paso{6. Ceros que persisten.}
+Normalícese $\|h_\ell\|_{\rm coef}=1$. Si $h_\ell=B_\ell c_\ell$, entonces $\|c_\ell\|_2=1$. Tras otra subsucesión,
+\[
+c_\ell\to c,\qquad h_\ell\to h=Bc\in V,\qquad\|h\|_{\rm coef}=1.
+\]
+Sean $\rho_{1,\ell},\ldots,\rho_{k,\ell}\in K_1$ ceros de $h_\ell$ contados con multiplicidad. Por compacidad de $K_1^k$, pasando a una subsucesión,
+\[
+\rho_{i,\ell}\to\rho_i,\qquad
+R_\ell(z)=\prod_{i=1}^k(z-\rho_{i,\ell})\longrightarrow R(z)=\prod_{i=1}^k(z-\rho_i).
+\]
+Por el Lema~\ref{lem:division},
+\[
+R_\ell\mid h_\ell\Longrightarrow R\mid h
+\Longrightarrow\deg h\ge k,
+\]
+porque $h\ne0$ y $\deg R=k$. Esto contradice $h\in V=\PP_{k-1}$. Existe, pues, una constante finita; reemplazarla por su máximo con uno y aplicar el paso 2 da \eqref{eq:concentration}.
+\end{proof}
+
+\subsection{Elecciones en intervalos reales}
+\begin{lemma}[Separación de un conjunto finito]\label{lem:finite}
+Si $Z\subseteq\C$ tiene a lo sumo $N$ puntos, $a\in\R$ y $r>0$, existe $\beta\in(a-r,a+r)$ tal que
+\[
+\dist(\beta,Z)>\frac{r}{2(N+1)}.
+\]
+\end{lemma}
+\begin{proof}
+Si $Z=\varnothing$, tómese $\beta=a$. Sea $Z\ne\varnothing$ y $\rho=r/[2(N+1)]$.
+Para $\zeta\in Z$, el conjunto
+\[
+I_\zeta=\{u\in\R:|u-\zeta|\le\rho\}
+\]
+es vacío, un punto o un intervalo de longitud a lo sumo $2\rho$. Denótese por $\operatorname{long}$ la suma de las longitudes de los intervalos disjuntos de una unión finita. Ordenar los extremos y fusionar intervalos que se solapan no aumenta esa suma. Por tanto
+\[
+\operatorname{long}\left(\bigcup_{\zeta\in Z}I_\zeta\right)
+\le\sum_{\zeta\in Z}\operatorname{long}(I_\zeta)
+\le2N\rho=\frac{Nr}{N+1}<2r.
+\]
+Se sigue que
+\[
+(a-r,a+r)\not\subseteq\bigcup_{\zeta\in Z}I_\zeta.
+\]
+Elíjase $\beta$ en la diferencia. Como $Z$ es finito,
+\[
+\dist(\beta,Z)=\min_{\zeta\in Z}|\beta-\zeta|>\rho.
+\]
+\end{proof}
+
+\begin{lemma}[Separación de una salida fijada]\label{lem:outputsep}
+Sean $a,A\in\R$, $r>0$ y $S\subseteq\R$ finito. Existe $\beta\in(a-r,a+r)\setminus S$ con $|A-\beta|>r/2$.
+\end{lemma}
+\begin{proof}
+Defínase
+\[
+J=\begin{cases}(a-r,a-r/2),&A\ge a,\\(a+r/2,a+r),&A<a.
+\end{cases}
+\]
+Entonces
+\[
+\beta\in J\Longrightarrow |A-\beta|>r/2,
+\qquad J\subset(a-r,a+r),\qquad\operatorname{long}(J)=r/2>0.
+\]
+Existen $|S|+1$ puntos distintos en $J$; al menos uno no pertenece a $S$. Ese punto satisface la conclusión.
+\end{proof}
+
+\par
+\bigskip
+
+\section{Estimaciones analíticas y raíces reales}\label{sec:analytic}
+
+\subsection{Derivadas y límites de polinomios}
+\begin{lemma}[Estimación de derivadas]\label{lem:cauchy}
+Sea $h$ un polinomio y supóngase $\{z:|z-a|\le\rho\}\subseteq K_R$, con $\rho>0$. Para todo $s\in\Nn$,
+\begin{equation}\label{eq:derivative}
+|h^{(s)}(a)|\le s!\rho^{-s}\norm h_R.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Escríbase $h(a+w)=\sum_{k=0}^Lb_kw^k$, con $b_k=0$ para $k>L$. Se tiene
+\[
+\frac1{2\pi}\int_0^{2\pi}e^{i(k-s)\theta}\,d\theta
+=\begin{cases}1,&k=s,\\0,&k\ne s,\end{cases}
+\]
+porque, para $k\ne s$, una primitiva es $e^{i(k-s)\theta}/[i(k-s)]$. Así
+\begin{align*}
+b_s\rho^s
+&=\sum_{k=0}^Lb_k\rho^k\frac1{2\pi}\int_0^{2\pi}e^{i(k-s)\theta}\,d\theta\\
+&=\frac1{2\pi}\int_0^{2\pi}h(a+\rho e^{i\theta})e^{-is\theta}\,d\theta.
+\end{align*}
+Por tanto
+\[
+|b_s|\rho^s\le\frac1{2\pi}\int_0^{2\pi}|h(a+\rho e^{i\theta})|\,d\theta\le\|h\|_R.
+\]
+La identidad $h^{(s)}(a)=s!b_s$ da \eqref{eq:derivative}.
+\end{proof}
+
+\begin{lemma}[Límite analítico y convergencia de derivadas]\label{lem:analyticlimit}
+Si una sucesión de polinomios $(f_m)$ converge uniformemente en cada $K_R$ a una función $F$, entonces $F$ es entera. Para cada $s\in\Nn$ y $R>0$,
+\[
+\norm{f_m^{(s)}-F^{(s)}}_R\longrightarrow0.
+\]
+Si todos los polinomios tienen coeficientes reales, entonces $F\in\ER$.
+\end{lemma}
+\begin{proof}
+\paso{1. Coeficientes en un disco.}
+Fíjense $a\in\C$, $r>0$ y un $K_R$ que contenga $\{z:|z-a|\le r\}$. La convergencia uniforme da
+\[
+\exists M<\infty\ \forall m\ \forall |z-a|\le r:\quad |f_m(z)|\le M.
+\]
+Escríbase $f_m(a+w)=\sum_{k\ge0}b_{k,m}w^k$, con coeficientes finales cero. Por la identidad integral del Lema~\ref{lem:cauchy},
+\[
+b_{k,m}=\frac{r^{-k}}{2\pi}\int_0^{2\pi}f_m(a+re^{i\theta})e^{-ik\theta}\,d\theta,
+\qquad |b_{k,m}|\le Mr^{-k}.
+\]
+La estimación de la diferencia de integrales por la norma uniforme implica
+\[
+b_{k,m}\to b_k:=\frac{r^{-k}}{2\pi}\int_0^{2\pi}F(a+re^{i\theta})e^{-ik\theta}\,d\theta,
+\qquad |b_k|\le Mr^{-k}.
+\]
+\paso{2. Serie límite.}
+Si $0<\rho<r$, entonces, para todo $L$,
+\[
+\sup_{|w|\le\rho}\left|\sum_{k>L}b_{k,m}w^k\right|
+\le M\sum_{k>L}(\rho/r)^k
+=M\frac{(\rho/r)^{L+1}}{1-\rho/r}.
+\]
+Pasando $m\to\infty$ en los primeros $L+1$ términos,
+\[
+\sup_{|w|\le\rho}\left|F(a+w)-\sum_{k=0}^Lb_kw^k\right|
+\le M\frac{(\rho/r)^{L+1}}{1-\rho/r}\xrightarrow[L\to\infty]{}0.
+\]
+Luego $F(a+w)=\sum_{k\ge0}b_kw^k$ para $|w|<r$. Como $a$ es arbitrario, $F$ es entera.
+\paso{3. Derivadas.}
+La diferenciación de la serie da
+\[
+f_m^{(s)}(a)=s!b_{s,m}\longrightarrow s!b_s=F^{(s)}(a).
+\]
+Para $R,\rho>0$, el Lema~\ref{lem:cauchy} aplicado en discos de radio $\rho$ centrados en $a\in K_R$ da
+\[
+|f_m^{(s)}(a)-f_\ell^{(s)}(a)|\le s!\rho^{-s}\|f_m-f_\ell\|_{R+\rho}.
+\]
+Pasando $\ell\to\infty$ y tomando el máximo en $a$,
+\[
+\|f_m^{(s)}-F^{(s)}\|_R\le s!\rho^{-s}\|f_m-F\|_{R+\rho}\longrightarrow0.
+\]
+\paso{4. Realidad.}
+Si $f_m$ tiene coeficientes reales,
+\[
+x\in\R\Longrightarrow f_m(x)\in\R
+\Longrightarrow F(x)=\lim_m f_m(x)\in\R.
+\]
+Junto con el paso 2, esto da $F\in\ER$.
+\end{proof}
+
+\subsection{Estabilidad de una raíz simple}
+\begin{lemma}[Entorno común de una raíz simple]\label{lem:rootball}
+Sean $f,P$ polinomios reales, $f(a)=0$, $f'(a)\ne0$, $P(a)\ne0$, y $R>|a|+1$. Existe $\rho\in(0,1)$ tal que
+\[
+I=[a-\rho,a+\rho]\subset(-R,R),\qquad P(u)\ne0\quad(u\in I).
+\]
+Para cada $\varepsilon>0$ existen $\varepsilon_0\in(0,\varepsilon]$ y $\mu,M>0$ tales que todo polinomio real $h$ con $\norm{h-f}_R\le\varepsilon_0$ tiene una única raíz en $I$, dicha raíz está en el interior de $I$, es simple, y
+\begin{equation}\label{eq:rootbounds}
+\mu\le |h'(u)|\le M\qquad(u\in I).
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Intervalo.}
+Por continuidad y $P(a)f'(a)\ne0$, elíjase $\rho\in(0,1)$ tal que
+\[
+I=[a-\rho,a+\rho]\subset(-R,R),\qquad P(u)f'(u)\ne0\quad(u\in I).
+\]
+Por el valor intermedio, $f'$ tiene signo constante. Por el valor medio,
+\[
+f(a-\rho)=-\rho f'(\xi_-),\qquad f(a+\rho)=\rho f'(\xi_+),\qquad\xi_\pm\in I,
+\]
+de modo que los signos de los dos valores son opuestos.
+\paso{2. Constantes.}
+Defínanse
+\[
+\mu_0=\min_I|f'|>0,\quad M_0=\max_I|f'|,\quad
+b=\min\{|f(a-\rho)|,|f(a+\rho)|\}>0,
+\]
+\[
+r_0=(R-\max_{u\in I}|u|)/2>0,\qquad
+0<\varepsilon_0<\min\{\varepsilon,b/2,r_0\mu_0/2,r_0\}.
+\]
+\paso{3. Cotas y signos.}
+Para $\|h-f\|_R\le\varepsilon_0$, el Lema~\ref{lem:cauchy} da
+\[
+\sup_I|h'-f'|\le r_0^{-1}\|h-f\|_R<\min\{\mu_0/2,1\},
+\quad |h(a\pm\rho)-f(a\pm\rho)|<b/2.
+\]
+Así $h$ conserva los signos opuestos en los extremos y $h'$ el signo de $f'$; luego existe una raíz interior y es única por monotonía estricta. Además
+\[
+|h'|\ge\mu_0-|h'-f'|>\mu_0/2,\qquad
+|h'|\le M_0+|h'-f'|<M_0+1.
+\]
+Tómense $\mu=\mu_0/2$, $M=M_0+1$. La derivada no nula en la raíz prueba simplicidad.
+\end{proof}
+
+\begin{definition}[Perturbación con factor fijado]\label{def:perturbation}
+Si $P$ es un polinomio real fijo, se llama \emph{perturbación con factor $P$} a un polinomio de la forma $H=PQ$. Reemplazar $h$ por $h+\xi H$, con $\xi\in\R$, se llama \emph{perturbar $h$ en la dirección $H$}. Estas expresiones designan las identidades algebraicas indicadas.
+\end{definition}
+
+\begin{lemma}[Cotas uniformes con factor fijado]\label{lem:factorbounds}
+Sean $P\ne0$ real, $R>0$, $I\subset(-R,R)$ un intervalo compacto y $d\ge1$. Existen $C_0,C_1\ge1$, dependientes sólo de $P,R,I,d$, tales que para todo $u\in I$ y todo $Q\in\PP_d(\R)$ con
+\[
+Q(u+w)=\sum_{\nu=0}^dq_\nu w^\nu,\qquad \max_\nu|q_\nu|\le1,
+\]
+se cumplen
+\begin{equation}\label{eq:factorbounds}
+\norm{PQ}_R\le C_0,\qquad \sup_I|(PQ)'|\le C_1.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Pónganse $B=\max_{u\in I}|u|$, $A=1+R+B$ y $D=1+2B$. Entonces
+\[
+z\in K_R,\ u\in I\Longrightarrow |z-u|\le R+B<A
+\Longrightarrow |Q(z)|\le\sum_{\nu=0}^dA^\nu,
+\]
+\[
+z,u\in I\Longrightarrow |z-u|\le2B<D
+\Longrightarrow
+\begin{cases}|Q(z)|\le\sum_{\nu=0}^dD^\nu,\\
+|Q'(z)|\le\sum_{\nu=1}^d\nu D^{\nu-1}.
+\end{cases}
+\]
+Defínanse
+\[
+C_0=\max\left\{1,\|P\|_R\sum_{\nu=0}^dA^\nu\right\},\qquad
+C_1=\max\left\{1,\sup_I|P'|\sum_{\nu=0}^dD^\nu+
+\sup_I|P|\sum_{\nu=1}^d\nu D^{\nu-1}\right\}.
+\]
+Por $|PQ|=|P||Q|$ y $(PQ)'=P'Q+PQ'$, se obtienen \eqref{eq:factorbounds}. Los supremos son finitos por compacidad, y las constantes sólo usan $P,R,I,d$.
+\end{proof}
+
+\begin{lemma}[Desplazamiento prescrito de una raíz]\label{lem:move}
+En las condiciones del Lema~\ref{lem:rootball}, sea $h$ un polinomio dentro de la bola $\norm{h-f}_R\le\varepsilon_0$, y sea $u\in I$ su raíz. Supóngase que un polinomio real $H$ satisface
+\[
+\norm H_R\le C_0,\qquad \sup_I|H'|\le C_1,\qquad
+|H(u)|\ge\sigma t^E,
+\]
+con $C_0,C_1\ge1$, $\sigma,t>0$ y $E\ge0$. Si
+\[
+0<\kappa\le\frac1{4C_1},\qquad
+\beta\in I,\qquad |\beta-u|<\kappa\sigma t^E,
+\]
+entonces $H(\beta)\ne0$ y el polinomio
+\begin{equation}\label{eq:move}
+\widetilde h=h+\xi H,\qquad \xi=-\frac{h(\beta)}{H(\beta)}
+\end{equation}
+satisface
+\[
+\widetilde h(\beta)=0,\qquad
+|\xi|<2M\kappa,\qquad
+\norm{\widetilde h-h}_R<2MC_0\kappa.
+\]
+Si $H^{(r_i)}(z_i)=0$ en ciertas consultas, $\widetilde h$ y $h$ tienen iguales respuestas en ellas. Si además $\norm{\widetilde h-f}_R\le\varepsilon_0$, su única raíz en $I$ es $\beta$ y es simple.
+\end{lemma}
+\begin{proof}
+El valor medio y la cota de $H'$ dan
+\begin{align*}
+|H(\beta)|&\ge |H(u)|-|H(\beta)-H(u)|\\
+&\ge\sigma t^E-C_1|\beta-u|\\
+&>\sigma(1-C_1\kappa)t^E\ge\tfrac34\sigma t^E>0.
+\end{align*}
+Así \eqref{eq:move} está definida. Como $h(u)=0$ y $|h'|\le M$ en $I$,
+\[
+|h(\beta)|\le M|\beta-u|<M\kappa\sigma t^E.
+\]
+Por consiguiente
+\[
+|\xi|<\frac{M\kappa\sigma t^E}{(3/4)\sigma t^E}
+=\tfrac43M\kappa<2M\kappa.
+\]
+La identidad $\widetilde h(\beta)=h(\beta)-h(\beta)=0$ y la cota
+\[
+\norm{\widetilde h-h}_R=|\xi|\norm H_R<2MC_0\kappa
+\]
+prueban las primeras afirmaciones. La linealidad de la derivación da
+\[
+\widetilde h^{(r_i)}(z_i)-h^{(r_i)}(z_i)=\xi H^{(r_i)}(z_i)=0.
+\]
+La última afirmación es la aplicación del Lema~\ref{lem:rootball} a $\widetilde h$ una vez verificada su pertenencia a la bola.
+\end{proof}
+
+\par
+\bigskip
+
+\section{Conservar consultas anteriores y controlar nuevas consultas}\label{sec:linear}
+
+\subsection{Un factor que anula consultas fijadas}
+\begin{lemma}[Factor de conservación]\label{lem:oldfactor}
+Sea $\mathcal S=((y_i,s_i))_{i=1}^L$ una lista finita de consultas. Defínase
+\[
+\Pi(z)=\prod_{i=1}^L(z-y_i)^{s_i+1},
+\]
+con $\Pi=1$ si $L=0$. Para todo polinomio $Q$,
+\[
+(\Pi Q)^{(s_i)}(y_i)=0\qquad(1\le i\le L).
+\]
+Si $a\notin\{y_1,\ldots,y_L\}$, entonces $\Pi(a)\ne0$.
+\end{lemma}
+\begin{proof}
+Para $1\le i\le L$, existe un polinomio $A_i$ tal que
+\[
+\Pi Q=(z-y_i)^{s_i+1}A_i(z).
+\]
+Si $A_i(y_i+w)=\sum_{j\ge0}a_{i,j}w^j$, entonces
+\[
+(\Pi Q)(y_i+w)=\sum_{j\ge0}a_{i,j}w^{s_i+1+j}
+\Longrightarrow (\Pi Q)^{(s_i)}(y_i)=0.
+\]
+Además
+\[
+a\ne y_i\ (1\le i\le L)\Longrightarrow
+\Pi(a)=\prod_{i=1}^L(a-y_i)^{s_i+1}\ne0.
+\]
+Para $L=0$, $\Pi=1$ y no hay condiciones de anulación.
+\end{proof}
+
+\subsection{Funcionales, núcleos y conjuntos de ceros}
+Una aplicación $L:V\to\mathbb K$ sobre un espacio vectorial se llama \emph{funcional lineal} si $L(au+bv)=aL(u)+bL(v)$. Su \emph{núcleo} es $\ker L=\{v:L(v)=0\}$. Para una lista $L_1,\ldots,L_j$, su \emph{rango sobre $V$} es la dimensión de la imagen de $v\mapsto(L_1(v),\ldots,L_j(v))$.
+
+Fijado un polinomio real $P\ne0$ y una lista de consultas $((z_i,r_i))_{i=1}^j$, se definen
+\begin{equation}\label{eq:functionals}
+L_i(Q)=(PQ)^{(r_i)}(z_i),\qquad
+V_{j,n}=\{Q\in\PP_n(\R):L_i(Q)=0\ (1\le i\le j)\}.
+\end{equation}
+Los $L_i$ son lineales porque la multiplicación por un polinomio fijo, la derivación y la evaluación son lineales. Los espacios $V_{j,n}$ no utilizan los valores de las respuestas, sólo $P$ y los pares $(z_i,r_i)$.
+
+Para un subespacio real $V$, se define su \emph{complejificación} por $V^{\C}=\{A+iB:A,B\in V\}$. Si $(v_1,\ldots,v_k)$ es una base real de $V$, es una base compleja de $V^{\C}$: la generación es inmediata; una relación compleja se separa en dos relaciones reales y obliga a anular todos sus coeficientes. En particular $\dim_\C V^{\C}=\dim_\R V$. Como las ecuaciones de \eqref{eq:functionals} tienen coeficientes reales, su núcleo complejo es precisamente $V_{j,n}^{\C}$. Se forman los wronskianos de esos espacios complejos.
+
+\begin{definition}[Conjunto de ceros asociado a un prefijo de consultas]\label{def:zeros}
+Fijados $d,P$ y las primeras $j$ consultas, se define $Z_j$ como la unión de los conjuntos de ceros de los wronskianos no constantes de $V_{j,n}^{\C}$, para $1\le n\le d$ y $V_{j,n}\ne\{0\}$. Los espacios nulos y los wronskianos constantes no aportan elementos a la unión.
+\end{definition}
+
+\begin{lemma}[Número de ceros a evitar]\label{lem:zerocount}
+Con la notación anterior,
+\begin{equation}\label{eq:zerocount}
+|Z_j|\le N_d:=\sum_{n=1}^d\left\lfloor\frac{(n+1)^2}{4}\right\rfloor.
+\end{equation}
+Aquí $|Z_j|$ denota cardinalidad y $\lfloor a\rfloor$ el mayor entero menor o igual que $a$. La cota no depende del grado de $P$, de los nodos ni de los órdenes de derivación.
+\end{lemma}
+\begin{proof}
+Si $\dim V_{j,n}=k\ge1$, el Lema~\ref{lem:wronskian} da
+\[
+\deg W_{V_{j,n}^{\C}}\le k(n+1-k)
+=\frac{(n+1)^2}{4}-\left(k-\frac{n+1}2\right)^2
+\le\left\lfloor\frac{(n+1)^2}{4}\right\rfloor.
+\]
+La última cota usa que el grado es entero. Por factorización, un polinomio no nulo de grado $s$ tiene a lo sumo $s$ ceros distintos. Así
+\[
+|Z_j|\le\sum_{n=1}^d|\{z:W_{V_{j,n}^{\C}}(z)=0\}|
+\le\sum_{n=1}^d\left\lfloor\frac{(n+1)^2}{4}\right\rfloor=N_d,
+\]
+omitiendo en la suma los espacios nulos y los wronskianos constantes, como en la Definición~\ref{def:zeros}. No interviene el grado de $P$.
+\end{proof}
+
+\subsection{Una perturbación cuantitativa después de responder}
+Para $i\ge1$ se fija
+\begin{equation}\label{eq:exponents}
+e_1=1,\qquad e_i=2^{i-2}\quad(i\ge2).
+\end{equation}
+Entonces $e_1=e_2=1$, la sucesión no decrece, y
+\begin{equation}\label{eq:sumexponents}
+\sum_{i=1}^je_i=2^{j-1}\qquad(j\ge1).
+\end{equation}
+En efecto, la identidad vale para $j=1$; si vale para $j$, añadir $e_{j+1}=2^{j-1}$ da $2^j$.
+
+\begin{lemma}[Perturbación a partir de separaciones]\label{lem:perturb}
+Fijemos $d\ge1$ y
+\[
+C=\max\bigl(\{1\}\cup\{C_{n,k}:1\le k\le n\le d\}\bigr).
+\]
+Sean $1\le j\le d$, $0<t\le1$, $u\in\R$, $P\ne0$ real y $b>0$ con $|P(u)|\ge b$. Supóngase que las primeras $j$ consultas están fijadas y que existen $0<\gamma_i\le1$ tales que
+\begin{equation}\label{eq:separations}
+\dist(u,Z_i)\ge\frac{\gamma_i}{2}t^{e_i}\qquad(1\le i\le j).
+\end{equation}
+Existe $Q\in\PP_j(\R)\setminus\{0\}$ con $L_i(Q)=0$ para $i\le j$, normalizado por
+\[
+Q(u+w)=\sum_{\nu=0}^jq_\nu w^\nu,\qquad\max_\nu|q_\nu|=1,
+\]
+y tal que
+\begin{equation}\label{eq:perturb}
+|P(u)Q(u)|\ge
+b\,2^{-(d+1)}\left(\prod_{i=1}^j\frac{\gamma_i}{2C}\right)t^{2^{j-1}}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Núcleo y grado mínimo.}
+Sea $K=\bigcap_{i=1}^j\ker(L_i|_{\PP_j(\R)})$. Por rango y nulidad,
+\[
+\dim K\ge(j+1)-j=1.
+\]
+Elíjase $Q\in K\setminus\{0\}$ de grado mínimo $n\le j$ y normalícese por el máximo módulo de sus coeficientes alrededor de $u$. Ese máximo es positivo y la normalización conserva $L_i(Q)=0$.
+\paso{2. Grado cero.}
+Si $n=0$, $|Q(u)|=1$ y
+\[
+b\,2^{-(d+1)}\prod_{i=1}^j\frac{\gamma_i}{2C}\,t^{2^{j-1}}
+\le b\le|P(u)Q(u)|.
+\]
+\paso{3. Rango para $n\ge1$.}
+La minimalidad implica
+\[
+\bigcap_{i=1}^j\ker(L_i|_{\PP_{n-1}})=\{0\}.
+\]
+Si el núcleo completo en $\PP_n$ contuviera $Q_1,Q_2$ independientes con coeficientes principales $a_1,a_2\ne0$, entonces
+\[
+0\ne a_2Q_1-a_1Q_2\in\bigcap_{i=1}^j\ker L_i,
+\qquad\deg(a_2Q_1-a_1Q_2)<n,
+\]
+contradicción. Por tanto su dimensión es uno y su rango es $n$.
+\paso{4. Incrementos del rango.}
+Al añadir una ecuación el rango aumenta a lo sumo en uno. Sean $i_1<\cdots<i_n$ las primeras posiciones donde alcanza $1,\ldots,n$. Entonces
+\[
+k_r:=n+1-r=\dim V_{i_r,n},\qquad Q\in V_{i_r,n},\qquad1\le k_r\le n.
+\]
+\paso{5. Distancias de raíces.}
+Ordene las distancias de las raíces de $Q$ a $u$, con multiplicidad, como $\rho_1\le\cdots\le\rho_n$. El Lema~\ref{lem:concentration} da, para cada $r$,
+\[
+\exists\zeta:\quad W_{V_{i_r,n}^{\C}}(\zeta)=0,
+\qquad |\zeta-u|\le C\rho_{k_r}.
+\]
+Ese wronskiano no es constante: de serlo,
+\[
+V_{i_r,n}^{\C}=\PP_{k_r-1}\Longrightarrow\deg Q\le k_r-1<n,
+\]
+contradicción. Luego $\zeta\in Z_{i_r}$ y
+\[
+\frac{\gamma_{i_r}}2t^{e_{i_r}}
+\le\dist(u,Z_{i_r})\le|u-\zeta|\le C\rho_{n+1-r}.
+\]
+Así
+\begin{equation}\label{eq:rootdist}
+\rho_{n+1-r}\ge\frac{\gamma_{i_r}}{2C}t^{e_{i_r}}>0.
+\end{equation}
+Como el miembro derecho no supera uno, también es una cota inferior de $\min\{1,\rho_{n+1-r}\}$.
+\paso{6. Producto.}
+Por el Lema~\ref{lem:value},
+\[
+|P(u)Q(u)|\ge b2^{-n}\left(\prod_{r=1}^n\frac{\gamma_{i_r}}{2C}\right)
+t^{\sum_{r=1}^ne_{i_r}}.
+\]
+Se tienen
+\[
+2^{-n}\ge2^{-(d+1)},\qquad
+\prod_{r=1}^n\frac{\gamma_{i_r}}{2C}\ge\prod_{i=1}^j\frac{\gamma_i}{2C},
+\qquad
+\sum_{r=1}^ne_{i_r}\le\sum_{i=1}^je_i=2^{j-1}.
+\]
+Como $0<t\le1$, estas desigualdades implican \eqref{eq:perturb}.
+\end{proof}
+
+\clearpage
+\section{Una etapa completa con constantes fijadas antes de la escala}\label{sec:stage}
+
+\begin{proposition}[Etapa finita con factor previamente fijado]\label{prop:stage}
+Sea $T$ un método total con presupuesto $d\ge1$ y sea $q=2^{d-1}$. Sean $f,P$ polinomios reales tales que
+\[
+f(a)=0,\qquad f'(a)\ne0,\qquad P(a)\ne0,
+\]
+y sean $R>|a|+1$, $\varepsilon>0$. Existen constantes $c,\tau>0$, fijadas antes de elegir $t$, tales que para todo $0<t<\tau$, con $x=a+t$, existen un polinomio real $g$ y una raíz simple $b$ de $g$ que satisfacen
+\begin{align}
+&\norm{g-f}_R<\varepsilon,\qquad P\mid(g-f),\label{eq:stage1}\\
+&|b-a|<t/8,\label{eq:stage2}\\
+&|T_g(x)-b|\ge c t^q.\label{eq:stage3}
+\end{align}
+Además $P(b)\ne0$ y $b$ no coincide con ningún nodo consultado en esa ejecución. Las constantes se obtienen de $f,P,R,\varepsilon,d$ y no dependen de $t$, de la separación entre nodos ni de los rangos que aparezcan.
+\end{proposition}
+
+\begin{proof}
+\paso{1. Normalización y constantes locales.}
+Por el Lema~\ref{lem:padding}, sustitúyase temporalmente $T$ por su versión de exactamente $d$ consultas. Normalícese $P$ mediante $P/\|P\|_R$; como $P(a)\ne0$, la divisibilidad no cambia. El Lema~\ref{lem:rootball} da
+\[
+I=[a-\rho,a+\rho],\quad0<\rho<1,\quad\varepsilon_0\le\varepsilon,\quad\mu,M>0,
+\quad b_0:=\min_I|P|\in(0,1].
+\]
+Fíjense $C_0,C_1$ del Lema~\ref{lem:factorbounds}, $C$ del Lema~\ref{lem:perturb} y $N=N_d$ de \eqref{eq:zerocount}.
+\paso{2. Constantes anteriores a $t$.}
+Defínanse
+\begin{equation}\label{eq:kappa}
+\kappa=\min\left\{\frac1{64(d+1)},\frac1{4C_1},
+\frac{\varepsilon_0}{8(d+1)MC_0}\right\},\qquad\sigma_0=b_0\,2^{-(d+1)},
+\end{equation}
+\begin{equation}\label{eq:constants}
+\lambda_j=\kappa\sigma_{j-1},\qquad
+\gamma_j=\frac{\lambda_j}{2(N+1)},\qquad
+\sigma_j=\sigma_{j-1}\frac{\gamma_j}{2C}\quad(1\le j\le d),
+\end{equation}
+y $\lambda_{d+1}=\kappa\sigma_d$. Por inducción,
+\[
+0<\sigma_j,\lambda_j,\gamma_j\le1,\qquad
+\sigma_j\le\sigma_{j-1}/2,\qquad\lambda_{j+1}\le\lambda_j.
+\]
+Además,
+\begin{equation}\label{eq:lambdagamma}
+\lambda_{i+1}=\frac{\kappa\sigma_{i-1}}{2C}\gamma_i
+\le\frac{\gamma_i}{128(d+1)}\quad(1\le i\le d).
+\end{equation}
+Con los exponentes de \eqref{eq:exponents}, para $0<t\le1$,
+\begin{equation}\label{eq:tailstage}
+\sum_{s=i+1}^{d+1}\lambda_st^{e_s}
+\le(d+1)\lambda_{i+1}t^{e_i}\le\frac{\gamma_i}{128}t^{e_i},
+\end{equation}
+\begin{equation}\label{eq:totalstage}
+\sum_{s=1}^{d+1}\lambda_st^{e_s}\le(d+1)\kappa t\le t/64.
+\end{equation}
+Fíjense $\tau=\min\{1,\rho\}$, $0<t<\tau$ y $x=a+t$.
+\paso{3. Invariantes.}
+Pónganse $h_0=f$, $a_0=a$, $\Rec_0=()$. En cada nivel $j$ se construirán $h_j,a_j,\Rec_j$ con
+\[
+\Rec_j\text{ prefijo admisible sobre }(h_j,x),\qquad h_j(a_j)=0,\quad a_j\in I,
+\]
+y, para $1\le s\le j$,
+\[
+P\mid(h_s-h_{s-1}),\quad
+(h_s-h_{s-1})^{(r_i)}(z_i)=0\ (i<s),
+\]
+\[
+\|h_s-h_{s-1}\|_R<\frac{\varepsilon_0}{4(d+1)},\quad
+|a_s-a_{s-1}|<\lambda_st^{e_s},\quad
+\dist(a_s,Z_s)>\gamma_st^{e_s}.
+\]
+Estos invariantes implican, para $j\ge1$,
+\begin{equation}\label{eq:ballstage}
+\|h_j-f\|_R<\frac{j\varepsilon_0}{4(d+1)}<\varepsilon_0,
+\end{equation}
+\begin{align}
+\dist(a_j,Z_i)
+&\ge\dist(a_i,Z_i)-|a_j-a_i|\notag\\
+&>\gamma_it^{e_i}-\sum_{s=i+1}^{j}\lambda_st^{e_s}
+\ge\frac{127}{128}\gamma_it^{e_i}
+>\frac{\gamma_i}{2}t^{e_i}\quad(i\le j),\label{eq:retainedsep}
+\end{align}
+cuando $Z_i\ne\varnothing$; si es vacío, la conclusión es $+\infty>\gamma_it^{e_i}/2$. También $|a_j-a|<t/64<\rho$. La raíz de $h_j$ en $I$ es simple y única por el Lema~\ref{lem:rootball}.
+\paso{4. Construcción de la primera respuesta.}
+Sea $\Phi_0(x)=(\ct,(z_1,r_1))$. Antes de definir la respuesta se forman $Z_1$ y los espacios $V_{1,n}$. Tómese $H=P$. Entonces
+\[
+\|H\|_R\le C_0,\quad\sup_I|H'|\le C_1,\quad
+|H(a)|\ge b_0\ge\sigma_0t^{e_1}.
+\]
+El Lema~\ref{lem:finite} da
+\[
+|\beta-a|<\lambda_1t,\qquad\dist(\beta,Z_1)>\gamma_1t,
+\quad\beta\in I,
+\]
+pues $\lambda_1t\le t/64<\rho$. Por el Lema~\ref{lem:move}, con $E=e_1=1$,
+\[
+h_1=f+\xi_1H,\quad a_1=\beta,\quad
+\|h_1-f\|_R<2MC_0\kappa\le\frac{\varepsilon_0}{4(d+1)}.
+\]
+Defínase $\eta_1=h_1^{(r_1)}(z_1)$. La igualdad de la primera regla, que sólo depende de $x$, y el Lema~\ref{lem:rootball} verifican todos los invariantes de $j=1$.
+\paso{5. Paso $j-1\to j$, $2\le j\le d$.}
+Supónganse los invariantes hasta $j-1$. La regla del método completado da
+\[
+\Phi_{j-1}(x,\eta_1,\ldots,\eta_{j-1})=(\ct,(z_j,r_j)).
+\]
+Se define $Z_j$ con ese par, antes de $\eta_j$. Para $u=a_{j-1}$, \eqref{eq:retainedsep} permite aplicar el Lema~\ref{lem:perturb} a las primeras $j-1$ consultas. Se obtiene $H=PQ$, $\deg Q\le j-1$, con
+\[
+H^{(r_i)}(z_i)=0\ (i<j),\qquad
+|H(u)|\ge b_0 2^{-(d+1)}\prod_{i<j}\frac{\gamma_i}{2C}\ t^{2^{j-2}}
+=\sigma_{j-1}t^{e_j}.
+\]
+La normalización de $Q$ y el Lema~\ref{lem:factorbounds} dan las mismas cotas $C_0,C_1$ para $H$. El Lema~\ref{lem:finite} proporciona
+\[
+|\beta-u|<\lambda_jt^{e_j},\qquad
+\dist(\beta,Z_j)>\gamma_jt^{e_j}.
+\]
+Por \eqref{eq:totalstage},
+\[
+|\beta-a|\le|u-a|+|\beta-u|
+<\sum_{s=1}^j\lambda_st^{e_s}\le t/64<\rho,
+\]
+luego $\beta\in I$. El Lema~\ref{lem:move} define
+\[
+h_j=h_{j-1}+\xi_jH,\quad a_j=\beta,\quad
+\|h_j-h_{j-1}\|_R<2MC_0\kappa\le\frac{\varepsilon_0}{4(d+1)}.
+\]
+Se verifica \eqref{eq:ballstage}; por el Lema~\ref{lem:rootball}, $a_j$ es la raíz simple única en $I$. Además
+\[
+H^{(r_i)}(z_i)=0\ (i<j)
+\Longrightarrow h_j^{(r_i)}(z_i)=h_{j-1}^{(r_i)}(z_i)=\eta_i.
+\]
+El Lema~\ref{lem:preserve} conserva el prefijo y la consulta ya elegida. Definiendo $\eta_j=h_j^{(r_j)}(z_j)$ se obtiene $\Rec_j$ admisible y se cierran los invariantes.
+\paso{6. Perturbación posterior a la salida.}
+Sea $A=T_{h_d}(x)$ la salida fijada por $\Rec_d$. El Lema~\ref{lem:perturb} da $H=PQ$ con
+\[
+H^{(r_i)}(z_i)=0\ (i\le d),\qquad |H(a_d)|\ge\sigma_dt^q.
+\]
+Para $S=\{z_1,\ldots,z_d\}$, el Lema~\ref{lem:outputsep} proporciona
+\[
+|\beta-a_d|<\lambda_{d+1}t^q,\quad\beta\notin S,
+\quad|A-\beta|>\tfrac12\lambda_{d+1}t^q.
+\]
+Por \eqref{eq:totalstage}, $\beta\in I$. El Lema~\ref{lem:move} define
+\[
+g=h_d+\xi_{d+1}H,\qquad b=\beta,
+\quad\|g-h_d\|_R<\frac{\varepsilon_0}{4(d+1)}.
+\]
+\paso{7. Verificación final.}
+Sumando los $d+1$ incrementos,
+\[
+\|g-f\|_R<\varepsilon_0/4<\varepsilon,\quad P\mid(g-f),\quad
+|b-a|<\sum_{s=1}^{d+1}\lambda_st^{e_s}\le t/64<t/8.
+\]
+La raíz $b$ es simple por el Lema~\ref{lem:rootball}. El Lema~\ref{lem:preserve} da $T_g(x)=A$, de donde
+\[
+|T_g(x)-b|=|A-\beta|>\frac{\lambda_{d+1}}2t^q.
+\]
+Sirve $c=\lambda_{d+1}/2$, fijado antes de $t$. Además $b\in I$ implica $P(b)\ne0$ y $b\notin S$ por construcción. Para $d=1$ se omite el paso 5 y se usan $e_1=e_2=1$. El Lema~\ref{lem:padding} restituye las salidas del método original; sus nodos son un subconjunto de los del método completado.
+\end{proof}
+
+\begin{remark}[Cuantificadores y naturaleza de la construcción]\label{rem:quantifiers}
+Para $T,d$ fijos, el orden demostrado es
+\[
+\forall(f,P,R,\varepsilon)\ \exists(c,\tau)>0\ 
+\forall t\in(0,\tau)\ \exists(g,b)
+\]
+con las hipótesis de la proposición. No se afirma una cota inferior común para $c$ al variar $P$. Los polinomios $h_j$ son objetos de la prueba: la ejecución del método sobre el polinomio final $g$ reproduce exactamente el registro construido, por el Lema~\ref{lem:preserve}. No se define un método al que se le cambie la función durante una ejecución real.
+\end{remark}
+
+\clearpage
+\section{Construcción de una única función entera}\label{sec:limit}
+
+\subsection{Polinomios, registros y márgenes sucesivos}
+Fijamos un método total $T$ de presupuesto $d$, $q=2^{d-1}$ y un real $p>q$. Mediante el Lema~\ref{lem:padding} trabajamos con un método que hace exactamente $d$ consultas y tiene las mismas salidas; la notación $T$ designará temporalmente ese método. Ponemos
+\[
+f_0(z)=z,\qquad\alpha_0=0,\qquad S_0=\varnothing.
+\]
+Para cada índice $m\ge1$ se construirán un polinomio $f_m$, su raíz $\alpha_m$, un punto inicial $x_m$, una escala $t_m>0$, una cota de error $a_m>0$ y un número $h_m>0$, llamado \emph{margen} por las desigualdades de su definición. El registro de $T$ sobre $(f_m,x_m)$ se escribirá
+\[
+\Rec_m=((z_{m,j},r_{m,j},\eta_{m,j}))_{j=1}^{d},
+\qquad
+S_m=\bigcup_{i=1}^{m}\{z_{i,1},\ldots,z_{i,d}\}.
+\]
+Así $S_m$ es un conjunto finito de nodos, mientras que $\Rec_m$ es una lista ordenada de triples; no se intercambian ambos objetos.
+
+\begin{lemma}[Existencia de todas las etapas]\label{lem:construction}
+Existen los objetos anteriores y constantes $c_m>0$ tales que, para todo $m\ge1$,
+\begin{align}
+&R_m=m+3,\quad
+\varepsilon_m=2^{-m-10}\min\{1,h_1,\ldots,h_{m-1}\},\label{eq:epsm}\\
+&\norm{f_m-f_{m-1}}_{R_m}<\varepsilon_m,\label{eq:increments}\\
+&0<t_m<\min(2^{-m},1/4),\quad x_m=\alpha_{m-1}+t_m,\label{eq:tm}\\
+&0<c_m\le1/8,\quad a_m=c_mt_m^q,\quad
+c_mt_m^{q-p}\ge 2^{p+1}m,\label{eq:am}\\
+&|\alpha_m-\alpha_{m-1}|<t_m/8,\quad
+|T_{f_m}(x_m)-\alpha_m|\ge a_m,\label{eq:rooterror}\\
+&\alpha_m\notin S_m,\quad
+h_m=\tfrac12\min\{1,a_m,t_m,\dist(\alpha_m,S_m)\}>0.\label{eq:hm}
+\end{align}
+El mínimo en \eqref{eq:epsm} vale uno para $m=1$. Cada diferencia $f_m-f_{m-1}$ anula todas las consultas de los registros anteriores. Además $f_m$ tiene una única raíz $\alpha_m$ en $(-1/2,1/2)$ y
+\begin{equation}\label{eq:rootlocalization}
+|\alpha_m|<2^{-10},\qquad f_m'(u)>1/2\quad(-1\le u\le1).
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Inicio e hipótesis inductiva.}
+Para $m=1$, $f_0(z)=z$, $\alpha_0=0$ y $S_0=\varnothing$. Supónganse construidos los índices menores que $m$. Para $m>1$,
+\[
+\|f_{m-1}-z\|_3\le\sum_{i<m}\|f_i-f_{i-1}\|_3
+<\sum_{i<m}2^{-i-10}<2^{-10}.
+\]
+Por el Lema~\ref{lem:cauchy}, usando radio uno en torno a $u\in[-1,1]$,
+\[
+|f_{m-1}'(u)-1|<2^{-10}\Longrightarrow f_{m-1}'(u)>1/2,
+\]
+\[
+f_{m-1}(-1/2)<-1/2+2^{-10}<0,
+\quad f_{m-1}(1/2)>1/2-2^{-10}>0.
+\]
+Por valor intermedio y monotonía existe una única raíz en $(-1/2,1/2)$, y
+\[
+|\alpha_{m-1}|=|\alpha_{m-1}-f_{m-1}(\alpha_{m-1})|<2^{-10}.
+\]
+Estas propiedades valen directamente para $m=1$.
+\paso{2. Factor.}
+Defínase
+\begin{equation}\label{eq:Pm}
+P_{m-1}(z)=\prod_{i=1}^{m-1}\prod_{j=1}^d(z-z_{i,j})^{r_{i,j}+1}.
+\end{equation}
+Como $\alpha_{m-1}\notin S_{m-1}$,
+\[
+P_{m-1}(\alpha_{m-1})\ne0.
+\]
+Fíjense $R_m$ y $\varepsilon_m$ por \eqref{eq:epsm}. La positividad de los $h_i$ implica $\varepsilon_m>0$.
+\paso{3. Constantes y escala.}
+La Proposición~\ref{prop:stage}, aplicada a $(f_{m-1},\alpha_{m-1},P_{m-1},R_m,\varepsilon_m)$, proporciona $c_m,\tau_m>0$. Redúzcase $c_m$ a $\min\{c_m,1/8\}$ y elíjase
+\begin{equation}\label{eq:choose-tm}
+0<t_m<\min\left\{\tau_m,2^{-m},\tfrac14,
+\left(\frac{c_m}{2^{p+1}m}\right)^{1/(p-q)}\right\}.
+\end{equation}
+El mínimo es positivo y $p-q>0$, luego
+\[
+t_m^{p-q}<\frac{c_m}{2^{p+1}m}
+\Longrightarrow c_mt_m^{q-p}>2^{p+1}m.
+\]
+\paso{4. Nuevo polinomio.}
+Con $x_m=\alpha_{m-1}+t_m$, la proposición da $f_m,\alpha_m$ con
+\[
+\|f_m-f_{m-1}\|_{R_m}<\varepsilon_m,\quad
+P_{m-1}\mid(f_m-f_{m-1}),\quad
+|\alpha_m-\alpha_{m-1}|<t_m/8,
+\]
+\[
+|T_{f_m}(x_m)-\alpha_m|\ge c_mt_m^q=:a_m>0,
+\qquad \alpha_m\notin S_m.
+\]
+Por el Lema~\ref{lem:oldfactor}, cada diferencia conserva todas las consultas previas. Además
+\[
+|\alpha_m|<2^{-10}+1/32<1/2,\qquad
+\|f_m-z\|_3<\sum_{i\le m}2^{-i-10}<2^{-10}.
+\]
+Repitiendo las desigualdades del paso 1 con $m$ en lugar de $m-1$,
+\[
+f_m'>1/2\text{ en }[-1,1],\quad
+\alpha_m\text{ es la única raíz en }(-1/2,1/2),\quad |\alpha_m|<2^{-10}.
+\]
+\paso{5. Margen.}
+La finitud de $S_m$ y $\alpha_m\notin S_m$ dan $\dist(\alpha_m,S_m)>0$ (o $+\infty$ si fuese vacío). Por tanto
+\[
+h_m=\tfrac12\min\{1,a_m,t_m,\dist(\alpha_m,S_m)\}>0.
+\]
+Quedan verificadas todas las hipótesis inductivas; la construcción existe para cada $m\in\N$.
+\end{proof}
+
+El orden de elección demostrado es
+\[
+(f_{m-1},P_{m-1},R_m,\varepsilon_m)
+\ \longrightarrow\ (c_m,\tau_m)
+\ \longrightarrow\ t_m
+\ \longrightarrow\ (f_m,\alpha_m,a_m,h_m).
+\]
+No se requiere que $c_m$ esté separado de cero al variar $m$. La elección \eqref{eq:choose-tm} se hace después de conocerlo.
+
+\subsection{Convergencia y control de las raíces}
+\begin{lemma}[Función límite y control de las colas]\label{lem:tails}
+Los polinomios del Lema~\ref{lem:construction} convergen uniformemente en cada disco compacto a una función $F\in\ER$. Esta función tiene una única raíz $\alpha\in(-1/2,1/2)$ y
+\[
+F'(u)>1/2\quad(-1\le u\le1),\qquad
+|\alpha-\alpha_m|\le2\sum_{j>m}\varepsilon_j<h_m/4.
+\]
+En particular,
+\begin{equation}\label{eq:limitalpha}
+|\alpha-\alpha_m|<a_m/4,\quad
+|\alpha-\alpha_m|<t_m/4,\quad \alpha\notin S_m.
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Límite en discos.}
+Fijado $R>0$, elíjase $m_0$ con $R_j\ge R$ para $j\ge m_0$. Si $\ell>m\ge m_0$,
+\[
+\|f_\ell-f_m\|_R\le\sum_{j=m+1}^\ell\|f_j-f_{j-1}\|_R
+<\sum_{j>m}2^{-j-10}\longrightarrow0.
+\]
+Por completitud de $\C$, $F_R(z)=\lim_m f_m(z)$ existe para cada $z\in K_R$; pasando $\ell\to\infty$ en la cota,
+\[
+\|F_R-f_m\|_R\le\sum_{j>m}2^{-j-10}\to0.
+\]
+Los límites coinciden en las intersecciones de discos, por unicidad del límite. Definen $F$ en $\C$. El Lema~\ref{lem:analyticlimit} da $F\in\ER$ y convergencia uniforme de cada derivada en discos compactos.
+\paso{2. Raíz.}
+\[
+\|F-z\|_3\le\sum_{j\ge1}2^{-j-10}=2^{-10},\qquad
+|F'(u)-1|\le2^{-10}\quad(u\in[-1,1]).
+\]
+Así $F'>1/2$ y
+\[
+F(-1/2)\le-1/2+2^{-10}<0<1/2-2^{-10}\le F(1/2).
+\]
+Valor intermedio y monotonía dan una única raíz $\alpha\in(-1/2,1/2)$.
+\paso{3. Límite de raíces.}
+Para $\ell>m$, el valor medio y $f_\ell'>1/2$ dan
+\begin{align*}
+|\alpha_\ell-\alpha_m|
+&\le2|f_\ell(\alpha_\ell)-f_\ell(\alpha_m)|\\
+&=2|(f_\ell-f_m)(\alpha_m)|\le2\sum_{j=m+1}^{\ell}\varepsilon_j.
+\end{align*}
+Luego $\alpha_m\to\beta\in[-2^{-10},2^{-10}]$. Como $f_\ell(\alpha_\ell)=0$,
+\[
+|F(\beta)|\le|F(\beta)-F(\alpha_\ell)|+
+|F(\alpha_\ell)-f_\ell(\alpha_\ell)|\longrightarrow0.
+\]
+Por continuidad, convergencia uniforme y unicidad de raíz, $\beta=\alpha$. Así
+\[
+|\alpha-\alpha_m|\le2\sum_{j>m}\varepsilon_j.
+\]
+\paso{4. Colas y márgenes.}
+Para $j>m$, \eqref{eq:epsm} implica $\varepsilon_j\le2^{-j-10}h_m$. Por tanto
+\[
+2\sum_{j>m}\varepsilon_j\le2h_m\sum_{j>m}2^{-j-10}
+=2^{-m-9}h_m<h_m/4.
+\]
+Como $h_m\le a_m$, $h_m\le t_m$ y $h_m\le\dist(\alpha_m,S_m)/2$, se obtiene
+\[
+|\alpha-\alpha_m|<a_m/4,\qquad|\alpha-\alpha_m|<t_m/4,
+\]
+\[
+\dist(\alpha,S_m)\ge\dist(\alpha_m,S_m)-|\alpha-\alpha_m|
+>\dist(\alpha_m,S_m)-h_m/4>0.
+\]
+Si $S_m=\varnothing$, la última afirmación es inmediata. Esto prueba \eqref{eq:limitalpha}.
+\end{proof}
+
+\subsection{Conservación exacta de cada salida}
+\begin{lemma}[Identidad de respuestas y de salidas]\label{lem:limitrecords}
+Para todo $m\ge1$ y cada consulta $(z_{m,j},r_{m,j})$ del registro $\Rec_m$,
+\[
+F^{(r_{m,j})}(z_{m,j})=f_m^{(r_{m,j})}(z_{m,j}).
+\]
+Por tanto,
+\begin{equation}\label{eq:outputs}
+T_F(x_m)=T_{f_m}(x_m).
+\end{equation}
+\end{lemma}
+\begin{proof}
+Fíjense $m$ y una consulta $(y,r)$ de $\Rec_m$. Para $\ell>m$,
+\[
+(z-y)^{r+1}\mid P_{\ell-1}\mid(f_\ell-f_{\ell-1})
+\overset{\text{Lema }\ref{lem:oldfactor}}{\Longrightarrow}
+(f_\ell-f_{\ell-1})^{(r)}(y)=0.
+\]
+Por tanto, para $L\ge m$,
+\[
+f_L^{(r)}(y)-f_m^{(r)}(y)
+=\sum_{\ell=m+1}^L(f_\ell-f_{\ell-1})^{(r)}(y)=0.
+\]
+Elíjase un disco $K_R$ que contenga $y$. Por el Lema~\ref{lem:analyticlimit},
+\[
+f_L^{(r)}(y)\longrightarrow F^{(r)}(y)
+\Longrightarrow F^{(r)}(y)=f_m^{(r)}(y).
+\]
+La igualdad vale para todas las consultas de $\Rec_m$, luego $F$ es compatible con ese registro. El Lema~\ref{lem:preserve} implica $T_F(x_m)=T_{f_m}(x_m)$, que es \eqref{eq:outputs}.
+\end{proof}
+
+\begin{remark}[Qué límite se utiliza]
+La igualdad de salidas no procede de continuidad de $T_f$ respecto de $f$. Se obtuvo mediante igualdad exacta de todas las respuestas de un registro finito. Para cada $m$ se compara $F$ con un polinomio distinto $f_m$; no se afirma que un único polinomio coincida con $F$ en todas las consultas de todas las etapas.
+\end{remark}
+
+\subsection{Prueba del resultado principal}
+\begin{theorem}[Una función entera para cada exponente superior]\label{thm:main}
+Sea $T$ un método total con presupuesto $d\ge1$, y sea $q=2^{d-1}$. Para cada real $p>q$ existen $F\in\ER$, una raíz real simple $\alpha$ y una sucesión $(x_m)$ tales que
+\[
+\alpha\in(-1/2,1/2),\quad F(\alpha)=0,\quad
+F'(u)>1/2\quad(-1\le u\le1),
+\]
+\[
+x_m>\alpha,\qquad x_m\longrightarrow\alpha,
+\qquad
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\longrightarrow+\infty.
+\]
+\end{theorem}
+\begin{proof}
+\paso{1. Objetos.}
+Aplíquense los Lemas~\ref{lem:construction}, \ref{lem:tails} y \ref{lem:limitrecords} al $p>q$ fijado. Por el Lema~\ref{lem:tails},
+\[
+F\in\ER,\quad \alpha\in(-1/2,1/2),\quad F(\alpha)=0,\quad
+F'(u)>1/2\quad(-1\le u\le1).
+\]
+\paso{2. Error de salida.}
+Por \eqref{eq:rooterror}, \eqref{eq:limitalpha} y \eqref{eq:outputs},
+\begin{align*}
+|T_F(x_m)-\alpha|
+&\ge|T_{f_m}(x_m)-\alpha_m|-|\alpha_m-\alpha|\\
+&>a_m-a_m/4\ge a_m/2.
+\end{align*}
+\paso{3. Error inicial.}
+\[
+x_m-\alpha=t_m+(\alpha_{m-1}-\alpha_m)+(\alpha_m-\alpha),
+\]
+\[
+|\alpha_{m-1}-\alpha_m|<t_m/8,\qquad |\alpha_m-\alpha|<t_m/4.
+\]
+Luego
+\begin{equation}\label{eq:positiveerror}
+\frac58t_m<x_m-\alpha<\frac{11}{8}t_m<2t_m.
+\end{equation}
+Así $x_m>\alpha$ y $x_m\to\alpha$, porque $t_m<2^{-m}$.
+\paso{4. Cociente.}
+\[
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}
+\ge\frac{a_m/2}{(2t_m)^p}
+=\frac{c_m}{2^{p+1}}t_m^{q-p}
+\overset{\eqref{eq:am}}{\ge}m\longrightarrow+\infty.
+\]
+Si $T$ designa el método completado, el Lema~\ref{lem:padding} da las mismas salidas del método original sobre $F$, y la conclusión se conserva.
+\end{proof}
+
+\begin{corollary}[Imposibilidad de un exponente local común mayor]\label{cor:totalbound}
+Un método total de presupuesto $d$ no puede tener orden local al menos $p>2^{d-1}$ para todas las funciones $F\in\ER$ con raíz distinguida $\alpha\in(-1/2,1/2)$ y $F'>1/2$ en $[-1,1]$.
+\end{corollary}
+\begin{proof}
+Supóngase el orden local $p>2^{d-1}$. El Teorema~\ref{thm:main} proporciona $F,\alpha,x_m$ con cociente divergente. Para esa misma $F$, la Definición~\ref{def:order} da $C_F,\delta_F>0$. Como $x_m>\alpha$ y $x_m\to\alpha$,
+\[
+\exists m_0\ \forall m\ge m_0:\quad0<x_m-\alpha<\delta_F
+\Longrightarrow \frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\le C_F.
+\]
+Esta acotación contradice la divergencia.
+\end{proof}
+
+\clearpage
+\section{Reglas parciales y funciones definidas en intervalos}\label{sec:partial}
+
+\subsection{Extensión explícita de las reglas}
+\begin{lemma}[Extensión total que conserva las ejecuciones válidas]\label{lem:extension}
+Sea $T$ un método de reglas parciales con presupuesto $d$. Existe un método total $\widetilde T$ con el mismo presupuesto tal que, para toda $F\in\ER$ y todo $x\in\Omega_{T,F}$,
+\[
+\widetilde T_F(x)=T_F(x).
+\]
+\end{lemma}
+\begin{proof}
+\paso{1. Aplicaciones totales.}
+Para $0\le k\le d$, defínase
+\[
+\widetilde\Phi_k(\hc_k)=
+\begin{cases}\Phi_k(\hc_k),&\hc_k\in D_k,\\(\st,0),&\hc_k\notin D_k.
+\end{cases}
+\]
+Entonces $\widetilde D_k=H_k$, $\widetilde\Phi_k(H_k)\subseteq\mathcal A$ para $k<d$ y $\widetilde\Phi_d(H_d)\subseteq\mathcal A_s$. La Proposición~\ref{prop:total} da $\Omega_{\widetilde T,F}=\R$.
+\paso{2. Conservación.}
+Para una ejecución original $(\Rec_k,a)$, la admisibilidad implica
+\[
+\hc_i\in D_i\ (0\le i\le k)
+\Longrightarrow\widetilde\Phi_i(\hc_i)=\Phi_i(\hc_i).
+\]
+Por inducción sobre $i$, coinciden las consultas y respuestas. En el último nivel,
+\[
+\widetilde\Phi_k(\hc_k)=\Phi_k(\hc_k)=(\st,a)
+\Longrightarrow\widetilde T_F(x)=a=T_F(x).
+\]
+La definición por casos es una aplicación matemática; no requiere un algoritmo de decisión de $D_k$.
+\end{proof}
+
+Esta extensión asigna directamente la salida cero cuando una regla original no está definida. Si se requieren exactamente $d$ consultas, se aplica después el Lema~\ref{lem:padding}. Ambas construcciones conservan las ejecuciones originalmente válidas y el mismo presupuesto máximo; ésta es la forma explícita adoptada en sustitución del estado de fallo descrito en la versión 2.1.
+
+\begin{theorem}[Cota para métodos parcialmente definidos]\label{thm:partial}
+Sea $T$ de presupuesto $d\ge1$. Supóngase que para cada $F\in\ER$ con raíz $\alpha\in(-1/2,1/2)$ y $F'>1/2$ en $[-1,1]$ existe $\delta_F>0$ tal que
+\[
+\{x:0<|x-\alpha|<\delta_F\}\subseteq\Omega_{T,F}.
+\]
+No existe un exponente $p>2^{d-1}$ para el cual $T$ satisfaga \eqref{eq:local} para todas esas funciones.
+\end{theorem}
+\begin{proof}
+Supóngase un exponente $p>2^{d-1}$ con la propiedad indicada. Por el Lema~\ref{lem:extension} y el Teorema~\ref{thm:main}, existen $F,\alpha,x_m$ tales que
+\[
+x_m>\alpha,\quad x_m\to\alpha,\qquad
+\frac{|\widetilde T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\to+\infty.
+\]
+Para esa función fija, la hipótesis de dominio y la estimación de orden dan $\delta_F,\varepsilon_F,C_F>0$. Luego
+\[
+\exists m_0\ \forall m\ge m_0:\quad
+0<x_m-\alpha<\min\{\delta_F,\varepsilon_F\},
+\]
+\[
+\frac{|\widetilde T_F(x_m)-\alpha|}{|x_m-\alpha|^p}
+\overset{\text{Lema }\ref{lem:extension}}=
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\le C_F,
+\]
+contradicción.
+\end{proof}
+
+\subsection{La clase local de problemas analíticos}
+\begin{definition}[Clase local $\DD$]\label{def:localclass}
+La clase $\DD$ está formada por problemas $(I_f,f,\alpha_f)$ tales que $I_f\subseteq\R$ es un intervalo abierto, $f:I_f\to\R$ es real analítica,
+\[
+\alpha_f\in I_f,\qquad f(\alpha_f)=0,\qquad
+f'(u)\ne0\quad(u\in I_f).
+\]
+Por abreviar se escribe $f\in\DD$, pero el intervalo es parte del problema. El método utiliza una misma tupla de reglas para todos esos problemas; ni $I_f$ ni $\alpha_f$ se añaden a sus datos. La disponibilidad de una consulta queda determinada por $\QQ_f=I_f\times\Nn$.
+\end{definition}
+
+\begin{lemma}[Unicidad de la raíz en la clase local]\label{lem:localunique}
+Cada problema de $\DD$ tiene una única raíz en $I_f$, y ésta es simple.
+\end{lemma}
+\begin{proof}
+La serie local de $f$ da continuidad de $f'$. Si $f'(a)f'(b)<0$ para $a,b\in I_f$, el valor intermedio implicaría
+\[
+\exists c\text{ entre }a,b:\quad f'(c)=0,
+\]
+contrario a la Definición~\ref{def:localclass}. Así $f'$ tiene signo constante y no nulo. Para $a<b$ en $I_f$, el valor medio da
+\[
+f(b)-f(a)=f'(c)(b-a)\ne0.
+\]
+Por tanto $f$ tiene a lo sumo una raíz; $f(\alpha_f)=0$ y $f'(\alpha_f)\ne0$ dan existencia y simplicidad.
+\end{proof}
+
+\begin{lemma}[Comparación con una restricción]\label{lem:restriction}
+Sea $T$ una tupla de reglas para $\DD$, y sea $\widetilde T$ su extensión total sobre funciones enteras. Fijemos $I_0=(-1,1)$. Si $F\in\ER$, $f=F|_{I_0}\in\DD$ y $x\in\Omega_{T,f}$, entonces
+\[
+\widetilde T_F(x)=T_f(x).
+\]
+\end{lemma}
+\begin{proof}
+Sea $(\Rec_k,a)$ una ejecución sobre $(f,x)$. Para cada consulta $(z_j,r_j)$,
+\[
+z_j\in I_0,\qquad f^{(r_j)}(z_j)=F^{(r_j)}(z_j)
+\]
+por el Lema~\ref{lem:real}. Por tanto $F$ es compatible con $\Rec_k$. Los Lemas~\ref{lem:preserve} y \ref{lem:extension} dan sucesivamente
+\[
+x\in\Omega_{T,F},\qquad T_F(x)=a=T_f(x),\qquad
+\widetilde T_F(x)=T_F(x)=T_f(x).
+\]
+No se usa ninguna evaluación fuera de $I_0$ de la ejecución original.
+\end{proof}
+
+\begin{theorem}[Cota local en la clase analítica]\label{thm:analyticbound}
+Sea $T$ un método determinista, causal y sin memoria de presupuesto $d\ge1$ para $\DD$. Si tiene orden local al menos $p>0$ en toda $\DD$, en el sentido de la Definición~\ref{def:order}, entonces
+\[
+p\le2^{d-1}.
+\]
+\end{theorem}
+\begin{proof}
+Supóngase $p>2^{d-1}$. Por el Lema~\ref{lem:extension} y el Teorema~\ref{thm:main}, existen $F,\alpha,x_m$ con
+\[
+F\in\ER,\quad\alpha\in(-1/2,1/2),\quad F(\alpha)=0,\quad F'>1/2\text{ en }[-1,1],
+\]
+\[
+x_m>\alpha,\quad x_m\to\alpha,\qquad
+\frac{|\widetilde T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\to+\infty.
+\]
+Póngase $f=F|_{(-1,1)}$. El Lema~\ref{lem:real} y las desigualdades anteriores implican
+\[
+f\text{ real analítica},\quad f(\alpha)=0,\quad f'=F'|_{(-1,1)}>1/2,
+\quad\Longrightarrow\quad f\in\DD.
+\]
+La Definición~\ref{def:order} proporciona $C_f,\delta_f>0$. Para $m$ suficientemente grande, el Lema~\ref{lem:restriction} da
+\[
+\frac{|\widetilde T_F(x_m)-\alpha|}{|x_m-\alpha|^p}
+=\frac{|T_f(x_m)-\alpha|}{|x_m-\alpha|^p}\le C_f,
+\]
+contradicción.
+\end{proof}
+
+\begin{remark}[Alcance de la hipótesis de dominio]
+Se exige validez en todo un entorno perforado para cada función fija, no sólo en una sucesión. Sin esa hipótesis, para los puntos $x_m$ construidos por la extensión se obtiene únicamente la alternativa: o hay índices arbitrariamente grandes con $x_m\notin\Omega_{T,f}$, o la estimación del error falla sobre los índices eventualmente válidos. No se requiere un radio común a distintas funciones.
+\end{remark}
+
+\par
+\bigskip
+
+\section{Evaluaciones utilizadas, coste de un cálculo y cota de Kung--Traub}\label{sec:KT}
+
+En esta sección se distinguen tres objetos: una aplicación que se desea calcular, un procedimiento que la calcula y el número de evaluaciones de ese procedimiento. Las Definiciones~\ref{def:calc}--\ref{def:realizedcost} y el Teorema~\ref{thm:exactrepresentation} son independientes de cualquier identificación bibliográfica de $v(\phi)$.
+
+\subsection{Procedimiento y cálculo válido}
+Se utilizan $\QQ$, $\QQ_f$ y $E_f$ de la Definición~\ref{def:query}. Para listas finitas, $b\Vert\eta$ denota la lista obtenida añadiendo $\eta$ al final de $b$; si $b$ es una lista de bloques, $b\Vert B$ añade un bloque completo.
+
+\begin{definition}[Procedimiento de cálculo]\label{def:calc}
+Un \emph{procedimiento} es una tupla
+\[
+\mathscr C=(\Sigma,\Sigma_{\rm int},\Sigma_{\rm con},\Sigma_{\rm sal},D_\iota,D_V,\iota,U,Q,V,A),
+\]
+donde $\Sigma$ es un conjunto, sus elementos se llaman \emph{estados}, y
+\[
+\Sigma_{\rm int},\Sigma_{\rm con},\Sigma_{\rm sal}\subseteq\Sigma,
+\qquad
+\Sigma_a\cap\Sigma_b=\varnothing\quad(a\ne b).
+\]
+Los índices $a,b$ de esta última expresión pertenecen a $\{\mathrm{int},\mathrm{con},\mathrm{sal}\}$. Las aplicaciones son
+\begin{align*}
+&\iota:D_\iota\subseteq\R\longrightarrow\Sigma,\qquad
+U:\Sigma_{\rm int}\longrightarrow\Sigma,\\
+&Q:\Sigma_{\rm con}\longrightarrow\QQ,\qquad
+V:D_V\subseteq\Sigma_{\rm con}\times\R\longrightarrow\Sigma,\qquad
+A:\Sigma_{\rm sal}\longrightarrow\R.
+\end{align*}
+Se denominan, respectivamente, inicialización, transformación interna, consulta asociada, incorporación de respuesta y aplicación de salida. Estos nombres designan las aplicaciones especificadas, no operaciones adicionales.
+
+Todos los componentes de $\mathscr C$ se fijan antes de $f$. La inicialización sólo recibe $x$; no recibe datos de aplicaciones anteriores, la raíz, el intervalo $I_f$ ni una descripción de $f$. No se exige continuidad ni computabilidad de las aplicaciones.
+\end{definition}
+
+\begin{definition}[Cálculo válido]\label{def:validcalc}
+Sean $f\in C^\infty(I_f)$ y $x\in\R$. Un \emph{cálculo válido} de $\mathscr C$ sobre $(f,x)$ es una lista $\boldsymbol s=(s_0,\ldots,s_L)$, $L\in\Nn$, que satisface
+\begin{equation}\label{eq:calcstart}
+x\in D_\iota,\qquad s_0=\iota(x),\qquad s_L\in\Sigma_{\rm sal},
+\end{equation}
+y, para $0\le i<L$, una de las dos alternativas disjuntas
+\begin{equation}\label{eq:calctransitions}
+\begin{cases}
+s_i\in\Sigma_{\rm int},\quad s_{i+1}=U(s_i),
+\end{cases}
+\quad\text{o}\quad
+\begin{cases}
+s_i\in\Sigma_{\rm con},\quad Q(s_i)\in\QQ_f,\\
+(s_i,E_f(Q(s_i)))\in D_V,\\
+s_{i+1}=V(s_i,E_f(Q(s_i))).
+\end{cases}
+\end{equation}
+Su \emph{salida} es $A(s_L)$. \emph{Terminar con salida $a$} significa que existe tal lista con $A(s_L)=a$. \emph{Cálculo indefinido} significa que no existe ninguna lista que satisfaga \eqref{eq:calcstart}--\eqref{eq:calctransitions}. Una evaluación fuera de $\QQ_f$ no proporciona respuesta ni señal de fallo utilizable.
+\end{definition}
+
+\begin{lemma}[Unicidad del cálculo]\label{lem:calcunique}
+Para $\mathscr C,f,x$ fijos hay a lo sumo un cálculo válido.
+\end{lemma}
+\begin{proof}
+Sean $(s_i)_{i=0}^L$ y $(t_i)_{i=0}^M$ dos cálculos.
+\paso{1. Inducción sobre los estados.}
+\[
+s_0=\iota(x)=t_0.
+\]
+Para $i<\min\{L,M\}$,
+\[
+s_i=t_i\Longrightarrow
+\begin{cases}
+s_{i+1}=U(s_i)=U(t_i)=t_{i+1},&s_i\in\Sigma_{\rm int},\\
+Q(s_i)=Q(t_i),\quad E_f(Q(s_i))=E_f(Q(t_i)),&s_i\in\Sigma_{\rm con},\\
+s_{i+1}=V(s_i,E_f(Q(s_i)))=t_{i+1},&s_i\in\Sigma_{\rm con}.
+\end{cases}
+\]
+Por inducción, $s_i=t_i$ para $i\le\min\{L,M\}$.
+\paso{2. Longitud y salida.}
+\[
+L<M\Longrightarrow s_L=t_L\in\Sigma_{\rm sal}\cap(\Sigma_{\rm int}\cup\Sigma_{\rm con})=\varnothing.
+\]
+Intercambiando $L,M$ se excluye $M<L$. Por tanto $L=M$ y $A(s_L)=A(t_L)$.
+\end{proof}
+
+Por el lema quedan definidas sin ambigüedad
+\[
+\Omega_{\mathscr C,f}=\{x:\text{existe un cálculo válido sobre }(f,x)\},
+\qquad C_f:\Omega_{\mathscr C,f}\longrightarrow\R,\quad C_f(x)=A(s_L).
+\]
+
+\subsection{Evaluación utilizada y coste realizado}
+\begin{definition}[Evaluación utilizada y registro del cálculo]\label{def:used}
+En un cálculo válido $\boldsymbol s=(s_0,\ldots,s_L)$ se define
+\[
+\mathcal J(\boldsymbol s)=\{i\in\{0,\ldots,L-1\}:s_i\in\Sigma_{\rm con}\}.
+\]
+Si $i\in\mathcal J(\boldsymbol s)$, se escriben
+\[
+q_i=Q(s_i)=(z_i,r_i),\qquad \eta_i=E_f(q_i).
+\]
+La adquisición indexada $(i,q_i,\eta_i)$ se llama \emph{evaluación utilizada en el cálculo}, en el sentido operacional adoptado aquí. Se cuenta aunque su respuesta no influya en la salida final.
+
+Si $\mathcal J(\boldsymbol s)=\{i_1<\cdots<i_k\}$, se define el \emph{registro de evaluaciones}
+\[
+\Rec_{\mathscr C,f}(x)=\bigl((z_{i_j},r_{i_j},\eta_{i_j})\bigr)_{j=1}^k,
+\]
+y los enteros
+\[
+N_{\mathscr C}(f,x)=k,\qquad
+N_{\mathscr C,r}(f,x)=|\{j:1\le j\le k,\ r_{i_j}=r\}|.
+\]
+Dos adquisiciones del mismo par $(z,r)$ en índices distintos cuentan dos veces. Una transformación interna que sólo reutiliza una respuesta no pertenece a $\mathcal J(\boldsymbol s)$ y no añade una evaluación. El Teorema~\ref{thm:exactrepresentation} formalizará la correspondencia con las consultas de la Sección~\ref{sec:model}.
+\end{definition}
+
+\begin{lemma}[Partición por órdenes]\label{lem:countpartition}
+En cada cálculo válido,
+\begin{equation}\label{eq:countpartition}
+N_{\mathscr C}(f,x)=\sum_{r\ge0}N_{\mathscr C,r}(f,x).
+\end{equation}
+Para un método $T$, denótese por $\Rec_{T,f}(x)$ el registro único de su ejecución válida desde $x$. Si ese registro es $((z_j,r_j,\eta_j))_{j=1}^k$, la definición
+\[
+\nu^{(r)}_{T,f}(x)=|\{j:1\le j\le k,\ r_j=r\}|
+\]
+satisface $\nu_{T,f}(x)=\sum_{r\ge0}\nu^{(r)}_{T,f}(x)$.
+\end{lemma}
+\begin{proof}
+Póngase $J_r=\{j:1\le j\le k,\ r_{i_j}=r\}$. Entonces
+\[
+J_r\cap J_s=\varnothing\ (r\ne s),\qquad
+\bigcup_{r\ge0}J_r=\{1,\ldots,k\},\qquad
+|\{r:J_r\ne\varnothing\}|\le k.
+\]
+Por aditividad de la cardinalidad en uniones finitas disjuntas,
+\[
+k=\sum_{r:J_r\ne\varnothing}|J_r|=\sum_{r\ge0}N_{\mathscr C,r}(f,x).
+\]
+La misma partición con los índices $r_j$ del método prueba la segunda identidad.
+\end{proof}
+
+\begin{definition}[Realización local, coste total y perfil]\label{def:realizedcost}\label{def:operative}
+Sea $\phi$ una asignación que a cada problema $f\in\DD$ asocia una aplicación parcial real $\phi(f)$, definida en un entorno de $\alpha_f$. Un \emph{conjunto local de entradas} es un conjunto $\mathcal U$ de pares $(f,x)$ tal que
+\begin{equation}\label{eq:localset}
+\begin{gathered}
+\mathcal U\subseteq\{(f,x):f\in\DD,\ x\in\Dom\phi(f),\ x\ne\alpha_f\},\\
+\forall f\in\DD\ \exists\delta_f>0\ \forall x\in\R,\qquad
+0<|x-\alpha_f|<\delta_f\Longrightarrow(f,x)\in\mathcal U.
+\end{gathered}
+\end{equation}
+Una \emph{realización local de $\phi$} es una terna $\mathfrak C=(\phi,\mathscr C,\mathcal U)$ con $\mathscr C$ fijo y
+\begin{equation}\label{eq:realization}
+(f,x)\in\mathcal U\Longrightarrow x\in\Omega_{\mathscr C,f},\qquad C_f(x)=\phi(f)(x).
+\end{equation}
+Su \emph{coste total} es
+\begin{equation}\label{eq:realizedcost}
+v(\mathfrak C)=\sup_{(f,x)\in\mathcal U}N_{\mathscr C}(f,x)\in[0,+\infty].
+\end{equation}
+Un entero $n\in\Nn$ es un \emph{presupuesto local} de la realización si $v(\mathfrak C)\le n$. Un presupuesto \emph{global} de $\mathscr C$ exige la misma desigualdad en todos sus cálculos válidos de la clase considerada.
+
+Las cotas por orden se denotan por
+\[
+b_r(\mathfrak C)=\sup_{(f,x)\in\mathcal U}N_{\mathscr C,r}(f,x).
+\]
+La realización tiene \emph{perfil fijo} $(c_r)_{r\ge0}$, con $c_r\in\Nn$, si
+\[
+\forall(f,x)\in\mathcal U\ \forall r\ge0,\qquad N_{\mathscr C,r}(f,x)=c_r.
+\]
+En ese caso se escribe $v_r(\mathfrak C)=c_r$. No se define el coste total de un cálculo con ramas como $\sum_r b_r(\mathfrak C)$.
+
+El conjunto $\mathcal U$ y los radios $\delta_f$ son objetos de la descripción local; no son argumentos de $\iota,U,Q,V,A$. El coste depende de la realización. No se minimiza entre procedimientos equivalentes ni se convierte en propiedad de la aplicación abstracta $\phi$ suprimiendo $\mathscr C$ de la notación.
+\end{definition}
+
+\begin{lemma}[Coste finito, cotas por orden y perfil fijo]\label{lem:costprofile}
+Si $v(\mathfrak C)<\infty$, es un entero y es el máximo de los conteos realizados en $\mathcal U$. En general,
+\begin{equation}\label{eq:summax}
+b_r(\mathfrak C)\le v(\mathfrak C),\qquad
+v(\mathfrak C)\le\sum_{r\ge0}b_r(\mathfrak C),
+\end{equation}
+con sumas no negativas eventualmente infinitas. Si el perfil es fijo, tiene soporte finito y
+\begin{equation}\label{eq:fixedprofile}
+v(\mathfrak C)=\sum_{r\ge0}v_r(\mathfrak C).
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Máximo.}
+La clase $\DD$ no es vacía: $f(u)=u$ sobre $(-1,1)$ pertenece a ella. Por \eqref{eq:localset}, $\mathcal U\ne\varnothing$. Si $M=v(\mathfrak C)<\infty$, entonces
+\[
+\varnothing\ne\{N_{\mathscr C}(f,x):(f,x)\in\mathcal U\}
+\subseteq\{0,1,\ldots,\lfloor M\rfloor\}.
+\]
+Este conjunto es finito, luego su supremo es su máximo y pertenece a $\Nn$.
+\paso{2. Desigualdades.}
+Por \eqref{eq:countpartition}, para cada $(f,x)\in\mathcal U$,
+\[
+N_{\mathscr C,r}(f,x)\le N_{\mathscr C}(f,x)
+\le\sum_{s\ge0}b_s(\mathfrak C).
+\]
+Tomar los supremos correspondientes da \eqref{eq:summax}.
+\paso{3. Perfil fijo.}
+Fíjese $(f_0,x_0)\in\mathcal U$. Entonces
+\[
+c_r=N_{\mathscr C,r}(f_0,x_0),\qquad
+|\{r:c_r\ne0\}|\le N_{\mathscr C}(f_0,x_0)<\infty.
+\]
+Para todo $(f,x)\in\mathcal U$,
+\[
+N_{\mathscr C}(f,x)=\sum_r c_r,
+\qquad\Longrightarrow\qquad v(\mathfrak C)=\sum_r c_r.
+\]
+\end{proof}
+
+\begin{example}[Dos ramas y dos presupuestos diferentes]\label{ex:branchcost}
+Considérese el método de presupuesto dos con reglas totales
+\[
+\Phi_0(x)=(\ct,(x,0)),\qquad
+\Phi_1(x,\eta_1)=
+\begin{cases}(\ct,(x,1)),&\eta_1\ge0,\\(\ct,(x,2)),&\eta_1<0,\end{cases}
+\qquad \Phi_2(x,\eta_1,\eta_2)=(\st,0).
+\]
+En todo cálculo sobre funciones enteras,
+\[
+(\nu^{(0)},\nu^{(1)},\nu^{(2)})=
+\begin{cases}(1,1,0),&f(x)\ge0,\\(1,0,1),&f(x)<0.\end{cases}
+\]
+Ambas ramas se realizan, por ejemplo con $f(u)=u$ y $x=1/2,-1/2$. Por tanto
+\[
+\sup\nu=2,\qquad
+\sup\nu^{(0)}+\sup\nu^{(1)}+\sup\nu^{(2)}=3.
+\]
+Así $\sup\sum_r\nu^{(r)}\ne\sum_r\sup\nu^{(r)}$. El ejemplo describe sólo un conteo; no se le atribuye convergencia a una raíz.
+\end{example}
+
+\subsection{Representación exacta sin evaluaciones adicionales}
+\begin{theorem}[Representación exacta de un cálculo con presupuesto]\label{thm:exactrepresentation}\label{lem:serialization}\label{prop:automatic}
+Sean $\mathscr C$ un procedimiento y $n\ge1$. Existe un método $T_{\mathscr C,n}$ de la Definición~\ref{def:method}, construido únicamente con $\mathscr C,n$, tal que, para todo $f\in C^\infty(I_f)$,
+\begin{equation}\label{eq:exactdomain}
+\Omega_{T_{\mathscr C,n},f}
+=\{x\in\Omega_{\mathscr C,f}:N_{\mathscr C}(f,x)\le n\}.
+\end{equation}
+Para cada $x$ de ese dominio,
+\begin{equation}\label{eq:exactrecords}
+(T_{\mathscr C,n})_f(x)=C_f(x),\qquad
+\Rec_{T_{\mathscr C,n},f}(x)=\Rec_{\mathscr C,f}(x),
+\end{equation}
+\begin{equation}\label{eq:exactcounts}
+\nu_{T_{\mathscr C,n},f}(x)=N_{\mathscr C}(f,x),\qquad
+\nu^{(r)}_{T_{\mathscr C,n},f}(x)=N_{\mathscr C,r}(f,x)\quad(r\ge0).
+\end{equation}
+En particular, si $\mathfrak C=(\phi,\mathscr C,\mathcal U)$ tiene presupuesto local $n$, esas identidades valen para todo $(f,x)\in\mathcal U$.
+\end{theorem}
+\begin{proof}
+\paso{1. Segmentos internos.}
+Defínase $\Gamma\subseteq\Sigma\times\Sigma$ por
+\[
+(s,t)\in\Gamma\Longleftrightarrow
+\exists m\in\Nn\ \exists(s^{(0)},\ldots,s^{(m)}):
+\begin{cases}
+s^{(0)}=s,\quad s^{(m)}=t\in\Sigma_{\rm con}\cup\Sigma_{\rm sal},\\
+s^{(i)}\in\Sigma_{\rm int},\quad s^{(i+1)}=U(s^{(i)})\quad(0\le i<m).
+\end{cases}
+\]
+Dos listas desde $s$ coinciden por inducción en sus índices comunes. Si sus longitudes fueran $m<m'$, el estado común de índice $m$ pertenecería a
+\[
+\Sigma_{\rm int}\cap(\Sigma_{\rm con}\cup\Sigma_{\rm sal})=\varnothing.
+\]
+Luego las listas y sus longitudes coinciden. Queda definida la aplicación parcial
+\[
+B:D_B\longrightarrow\Sigma_{\rm con}\cup\Sigma_{\rm sal},\qquad
+D_B=\{s:\exists t\ (s,t)\in\Gamma\},\quad B(s)=t.
+\]
+\paso{2. Reconstrucción con respuestas formales.}
+Pónganse $H_k=\R^{k+1}$ y
+\[
+G_0=\{(x):x\in D_\iota,\ \iota(x)\in D_B\},\qquad
+b_0(x)=B(\iota(x)).
+\]
+Para $1\le k\le n$ se definen recursivamente
+\begin{align*}
+G_k=\{\hc_k=(\hc_{k-1},\eta_k):\;&\hc_{k-1}\in G_{k-1},\quad b_{k-1}(\hc_{k-1})\in\Sigma_{\rm con},\\
+&(b_{k-1}(\hc_{k-1}),\eta_k)\in D_V,\\
+&V(b_{k-1}(\hc_{k-1}),\eta_k)\in D_B\},
+\end{align*}
+\[
+b_k(\hc_k)=B\bigl(V(b_{k-1}(\hc_{k-1}),\eta_k)\bigr)\qquad(\hc_k\in G_k).
+\]
+Por inducción, cada $b_k$ es una aplicación de $G_k$ en $\Sigma_{\rm con}\cup\Sigma_{\rm sal}$, determinada por $\mathscr C$ y el prefijo formal $\hc_k$.
+\paso{3. Reglas del método.}
+Para $k<n$ se toman $D_k=G_k$ y
+\[
+\Phi_k(\hc_k)=
+\begin{cases}
+(\ct,Q(b_k(\hc_k))),&b_k(\hc_k)\in\Sigma_{\rm con},\\
+(\st,A(b_k(\hc_k))),&b_k(\hc_k)\in\Sigma_{\rm sal}.
+\end{cases}
+\]
+Para $k=n$ se toman
+\[
+D_n=\{\hc_n\in G_n:b_n(\hc_n)\in\Sigma_{\rm sal}\},\qquad
+\Phi_n(\hc_n)=(\st,A(b_n(\hc_n))).
+\]
+Entonces $\Phi_k:D_k\to\mathcal A$ para $k<n$ y $\Phi_n:D_n\to\mathcal A_s$. Ninguna regla tiene $f$, $I_f$, $\alpha_f$ ni $\mathcal U$ como argumento.
+\paso{4. Del cálculo al registro.}
+Fíjese un cálculo válido $(s_0,\ldots,s_L)$ con $k\le n$ evaluaciones. Sean
+\[
+i_1<\cdots<i_k\quad\text{sus índices de consulta},\qquad i_{k+1}=L.
+\]
+Si $k=0$, todos los estados anteriores a $s_L$ son internos y
+\[
+b_0(x)=B(\iota(x))=s_L\in\Sigma_{\rm sal};
+\]
+por tanto hay una ejecución de $T_{\mathscr C,n}$ con cero consultas y salida $A(s_L)$.
+
+Sea $k\ge1$. El segmento interno inicial da $b_0(x)=s_{i_1}$. Con
+\[
+\eta_j=E_f(Q(s_{i_j})),\qquad \hc_j=(x,\eta_1,\ldots,\eta_j),
+\]
+la inducción proporciona
+\begin{align*}
+b_{j-1}(\hc_{j-1})=s_{i_j}
+&\Longrightarrow V(b_{j-1}(\hc_{j-1}),\eta_j)=s_{i_j+1},\\
+&\Longrightarrow b_j(\hc_j)=B(s_{i_j+1})=s_{i_{j+1}}
+\quad(1\le j\le k).
+\end{align*}
+En cada paso, las pertenencias a $D_V,D_B$ son las del cálculo fijado. Para $j<k$ se obtiene el mismo par de consulta; para $j=k$, $b_k(\hc_k)=s_L\in\Sigma_{\rm sal}$. Si $k=n$, esta última pertenencia verifica $\hc_n\in D_n$. Así se obtienen la misma lista de evaluaciones y la salida $A(s_L)$.
+\paso{5. Del registro al cálculo.}
+Sea $(\Rec_k,a)$ una ejecución válida del método. Por el paso 2 existen los segmentos internos finitos únicos
+\[
+\iota(x)\xrightarrow{\ U\ }b_0,\qquad
+V(b_{j-1},\eta_j)\xrightarrow{\ U\ }b_j\quad(1\le j\le k).
+\]
+La flecha denota la lista interna de $\Gamma$, no una operación nueva. Por admisibilidad,
+\[
+b_{j-1}\in\Sigma_{\rm con},\quad Q(b_{j-1})=q_j\in\QQ_f,
+\quad\eta_j=E_f(q_j),
+\]
+y por la salida $b_k\in\Sigma_{\rm sal}$, $A(b_k)=a$. Concatenar esos segmentos y las $k$ transiciones $V$ produce una lista finita que satisface \eqref{eq:calcstart}--\eqref{eq:calctransitions}. Tiene exactamente las $k$ evaluaciones de $\Rec_k$. Luego
+\[
+x\in\Omega_{\mathscr C,f},\qquad N_{\mathscr C}(f,x)=k\le n,\qquad C_f(x)=a.
+\]
+\paso{6. Dominio, coste y localidad.}
+Los pasos 4 y 5 prueban \eqref{eq:exactdomain} y \eqref{eq:exactrecords}; el Lema~\ref{lem:countpartition} da \eqref{eq:exactcounts}. Si $v(\mathfrak C)\le n$, entonces
+\[
+(f,x)\in\mathcal U\Longrightarrow
+x\in\Omega_{\mathscr C,f},\quad N_{\mathscr C}(f,x)\le n
+\Longrightarrow x\in\Omega_{T_{\mathscr C,n},f}.
+\]
+Las identidades locales se siguen de \eqref{eq:realization}. La construcción de $T_{\mathscr C,n}$ no utiliza los radios de \eqref{eq:localset}.
+\end{proof}
+
+\begin{proposition}[Un método también es un procedimiento con el mismo coste]\label{prop:methodprocedure}
+Para todo método $T$ de presupuesto $d$ existe un procedimiento $\mathscr C_T$ con exactamente los mismos dominios de ejecución, registros, salidas y conteos por orden.
+\end{proposition}
+\begin{proof}
+\paso{1. Tupla.}
+Defínanse
+\[
+\Sigma=\bigcup_{k=0}^d\{k\}\times H_k,\qquad \Sigma_{\rm int}=\varnothing,
+\]
+\[
+\Sigma_{\rm con}=\{(k,\hc):k<d,\ \hc\in D_k,\ \Phi_k(\hc)\in\mathcal A_c\},
+\quad
+\Sigma_{\rm sal}=\{(k,\hc):\hc\in D_k,\ \Phi_k(\hc)\in\mathcal A_s\}.
+\]
+Son disjuntos porque $\mathcal A_c\cap\mathcal A_s=\varnothing$. Pónganse
+\[
+\iota(x)=(0,(x)),\qquad
+Q(k,\hc)=q\ \Longleftrightarrow\ \Phi_k(\hc)=(\ct,q),
+\]
+\[
+V((k,\hc),\eta)=(k+1,\hc\Vert\eta),\quad D_V=\Sigma_{\rm con}\times\R,
+\qquad
+A(k,\hc)=a\ \Longleftrightarrow\ \Phi_k(\hc)=(\st,a).
+\]
+La aplicación $U$ es la aplicación vacía. En $D_V$, $k<d$, de modo que el nuevo estado pertenece a $\Sigma$.
+\paso{2. Identidad de las ecuaciones.}
+Para $q_j=(z_j,r_j)$,
+\[
+(\Rec_k,a)\text{ satisface \eqref{eq:prefix}--\eqref{eq:exit}}
+\Longleftrightarrow
+((j,\hc_j))_{j=0}^k\text{ satisface \eqref{eq:calcstart}--\eqref{eq:calctransitions}},
+\]
+porque en ambos casos
+\[
+\Phi_j(\hc_j)=(\ct,q_{j+1}),\quad
+\eta_{j+1}=E_f(q_{j+1}),\quad
+\hc_{j+1}=\hc_j\Vert\eta_{j+1},\quad
+\Phi_k(\hc_k)=(\st,a).
+\]
+Todas las transiciones son de consulta. Por tanto $L=k$, los registros coinciden y $N_{\mathscr C_T,r}=\nu^{(r)}_{T,f}$.
+\end{proof}
+
+\subsection{Reutilización y construcciones por etapas}
+\begin{lemma}[Reutilización sin nuevas adquisiciones]\label{lem:cache}
+Para un procedimiento $\mathscr C$ existe otro $\mathscr C^{\rm mem}$ que conserva todos sus cálculos válidos y sus salidas, y realiza una sola adquisición por cada par distinto $(z,r)$ de cada cálculo. En cada orden de derivación el número de adquisiciones no aumenta. El almacenamiento se vacía al comenzar cada aplicación.
+\end{lemma}
+\begin{proof}
+\paso{1. Listas.}
+Póngase $\mathcal M=\bigcup_{h\ge0}(\QQ\times\R)^h$. Para $M=((q_i,\eta_i))_{i=1}^h$,
+\[
+I_M(q)=\{i:1\le i\le h,\ q_i=q\},\qquad
+ e_M(q)=\eta_{\min I_M(q)}\quad(I_M(q)\ne\varnothing).
+\]
+\paso{2. Estados y aplicaciones.}
+Con $\Sigma'=\Sigma\times\mathcal M$ se definen
+\begin{align*}
+\Sigma'_{\rm sal}&=\Sigma_{\rm sal}\times\mathcal M,\\
+\Sigma'_{\rm con}&=\{(s,M):s\in\Sigma_{\rm con},\ I_M(Q(s))=\varnothing\},\\
+\Sigma'_{\rm int}&=(\Sigma_{\rm int}\times\mathcal M)\ \cup\
+\{(s,M):s\in\Sigma_{\rm con},\ I_M(Q(s))\ne\varnothing,\ (s,e_M(Q(s)))\in D_V\}.
+\end{align*}
+Las condiciones $s\in\Sigma_{\rm int}$, $s\in\Sigma_{\rm con}$, $s\in\Sigma_{\rm sal}$ y $I_M(Q(s))=\varnothing$ o $\ne\varnothing$ prueban la disjunción. Se toman
+\begin{align*}
+\iota'(x)&=(\iota(x),()),& Q'(s,M)&=Q(s),& A'(s,M)&=A(s),\\
+V'((s,M),\eta)&=(V(s,\eta),M\Vert(Q(s),\eta)),
+\end{align*}
+con $D_{V'}=\{((s,M),\eta):(s,M)\in\Sigma'_{\rm con},\ (s,\eta)\in D_V\}$, y
+\[
+U'(s,M)=\begin{cases}(U(s),M),&s\in\Sigma_{\rm int},\\
+(V(s,e_M(Q(s))),M),&s\in\Sigma_{\rm con},\ (s,M)\in\Sigma'_{\rm int}.
+\end{cases}
+\]
+\paso{3. Invariante y conservación.}
+En cada estado alcanzado sobre $f$,
+\[
+\mathcal I(M):\quad(q_i,\eta_i)\in M\Longrightarrow q_i\in\QQ_f,\quad\eta_i=E_f(q_i).
+\]
+Se tiene $\mathcal I(())$. Una consulta nueva añade $(Q(s),E_f(Q(s)))$ y preserva $\mathcal I$. Si el par ya aparece,
+\[
+\mathcal I(M)\Longrightarrow e_M(Q(s))=E_f(Q(s))
+\Longrightarrow U'(s,M)=(V(s,E_f(Q(s))),M).
+\]
+La primera coordenada es exactamente el estado siguiente del cálculo original. Por inducción, cada transición original tiene una transición nueva con esa primera coordenada y la misma salida final.
+\paso{4. Conteo.}
+Cada primera aparición de $(z,r)$ añade una entrada a $M$; las posteriores son internas. Por tanto
+\[
+N_{\mathscr C^{\rm mem},r}(f,x)
+=|\{(z,r): (z,r)\text{ aparece en el registro original}\}|
+\le N_{\mathscr C,r}(f,x).
+\]
+El cálculo transformado sigue teniendo $L$ transiciones, luego es finito. Como $\iota'$ usa la lista vacía, no se conserva información entre aplicaciones.
+\end{proof}
+
+\begin{definition}[Realización por etapas]\label{def:stages}
+Se fija una tupla
+\[
+\mathfrak R=(\ell,(S_j)_{j<\ell},(W_j)_{j<\ell},(\bar u_{j+1})_{j<\ell}),\qquad\ell\ge1,
+\]
+con $S_j=\{r_{j,1}<\cdots<r_{j,m_j}\}\subset\Nn$ finito, $a_j=\sum_{i<j}m_i$,
+\[
+W_j\subseteq\R^{1+a_j+m_j},\qquad \bar u_{j+1}:W_j\to\R.
+\]
+Se permiten $m_j=0$, $S_j=\varnothing$ y $\R^0=\{()\}$. Una evaluación válida de la tupla sobre $(f,x)$ consiste en listas que satisfacen
+\begin{equation}\label{eq:reducedstages}
+\begin{gathered}
+z_0=x,\qquad B_j=(f^{(r_{j,1})}(z_j),\ldots,f^{(r_{j,m_j})}(z_j)),\\
+(x;B_0,\ldots,B_j)\in W_j,\qquad
+z_{j+1}=\bar u_{j+1}(x;B_0,\ldots,B_j)\quad(j<\ell).
+\end{gathered}
+\end{equation}
+Se exige $z_j\in I_f$ cuando $m_j>0$; si $m_j=0$, $B_j=()$ sin evaluación. La notación $(x;B_0,\ldots,B_j)$ concatena las coordenadas. La salida es $z_\ell$. La tupla es una realización de $\phi$ en $\mathcal U$ si esas listas existen y $z_\ell=\phi(f)(x)$ para todo $(f,x)\in\mathcal U$.
+\end{definition}
+
+\begin{proposition}[Construcción por etapas y conteo exacto]\label{prop:stages}
+Toda tupla de la Definición~\ref{def:stages} determina un procedimiento $\mathscr C_{\mathfrak R}$ con las mismas evaluaciones válidas y salidas. Sus cálculos tienen perfil fijo
+\[
+c_r=\sum_{j<\ell}\mathbf1_{S_j}(r),\qquad
+N=\sum_{j<\ell}|S_j|=\sum_{r\ge0}c_r,
+\]
+donde $\mathbf1_S(r)$ es uno para $r\in S$ y cero en otro caso.
+\end{proposition}
+\begin{proof}
+\paso{1. Estados.}
+Fíjese una etiqueta $\mathrm{o}$ distinta de los enteros. Se definen
+\begin{align*}
+\Sigma_{\rm trab}=\{(j,t,x,\boldsymbol B,z,b):\;&0\le j<\ell,\ 0\le t\le m_j,\ x,z\in\R,\\
+&\boldsymbol B\in\prod_{i<j}\R^{m_i},\ b\in\R^t\},
+\end{align*}
+\[
+\Sigma_{\rm sal}=\{(\mathrm{o},a):a\in\R\},\qquad
+\Sigma=\Sigma_{\rm trab}\cup\Sigma_{\rm sal},
+\]
+\[
+\Sigma_{\rm con}=\{s\in\Sigma_{\rm trab}:t<m_j\},\qquad
+\Sigma_{\rm int}=\{s\in\Sigma_{\rm trab}:t=m_j,\ (x;\boldsymbol B,b)\in W_j\}.
+\]
+El producto con $j=0$ contiene la lista vacía. Las condiciones $t<m_j$, $t=m_j$ y la etiqueta $\mathrm{o}$ distinguen las tres clases.
+\paso{2. Aplicaciones.}
+Para $s=(j,t,x,\boldsymbol B,z,b)$,
+\[
+\iota(x)=(0,0,x,(),x,()),\qquad Q(s)=(z,r_{j,t+1}),\qquad A(\mathrm{o},a)=a,
+\]
+\[
+D_V=\Sigma_{\rm con}\times\R,\qquad
+V(s,\eta)=(j,t+1,x,\boldsymbol B,z,b\Vert\eta).
+\]
+Si $s\in\Sigma_{\rm int}$, se define $z^+=\bar u_{j+1}(x;\boldsymbol B,b)$ y
+\[
+U(s)=\begin{cases}
+(j+1,0,x,\boldsymbol B\Vert b,z^+,()),&j+1<\ell,\\
+(\mathrm{o},z^+),&j+1=\ell.
+\end{cases}
+\]
+En $Q$, $t<m_j$ garantiza la existencia del índice; en $V$, $t+1\le m_j$; en $U$, la pertenencia a $W_j$ garantiza $z^+\in\R$. Quedan verificados todos los dominios y codominios.
+\paso{3. Inducción.}
+Para unas listas que satisfacen \eqref{eq:reducedstages}, póngase
+\[
+s_{j,t}=(j,t,x,(B_0,\ldots,B_{j-1}),z_j,b_{j,t}),\quad
+b_{j,t}=(f^{(r_{j,1})}(z_j),\ldots,f^{(r_{j,t})}(z_j)).
+\]
+Entonces $s_{0,0}=\iota(x)$ y
+\begin{align*}
+t<m_j&\Longrightarrow Q(s_{j,t})=(z_j,r_{j,t+1}),\\
+&\phantom{\Longrightarrow}V(s_{j,t},E_f(Q(s_{j,t})))=s_{j,t+1},\\
+t=m_j&\Longrightarrow b_{j,m_j}=B_j,\quad z^+=z_{j+1},\\
+&\phantom{\Longrightarrow}U(s_{j,m_j})=
+\begin{cases}s_{j+1,0},&j+1<\ell,\\(\mathrm{o},z_\ell),&j+1=\ell.\end{cases}
+\end{align*}
+La inducción sobre $t$ y luego sobre $j$ produce un cálculo con salida $z_\ell$. Recíprocamente, las únicas transiciones definidas imponen esas mismas identidades; todo cálculo válido produce listas de \eqref{eq:reducedstages}.
+\paso{4. Finitud y coste.}
+\[
+L=\sum_{j<\ell}(m_j+1)=N+\ell<\infty,
+\qquad
+N_{\mathscr C_{\mathfrak R},r}(f,x)=\sum_{j<\ell}\mathbf1_{S_j}(r)=c_r.
+\]
+Si $m_j=0$, sólo hay la transición interna de esa etapa. Sumando los conteos por órdenes,
+\[
+\sum_r c_r=\sum_{j<\ell}\sum_{r\in S_j}1=\sum_{j<\ell}m_j=N.
+\]
+\end{proof}
+
+\begin{lemma}[Reducción conjunta de argumentos]\label{lem:projection}\label{lem:sparse}
+Sean $D\subseteq X\times Y$, $u:D\to Z$ y $\pi:D\to X$, $\pi(a,b)=a$. Existe $\bar u:\pi(D)\to Z$ con $u=\bar u\circ\pi$ si y sólo si
+\begin{equation}\label{eq:projectioncriterion}
+(a,b),(a,b')\in D\Longrightarrow u(a,b)=u(a,b').
+\end{equation}
+La aplicación reducida es única. Para la segunda afirmación, una representación por bloques completos significa unas ecuaciones
+\[
+z_0=x,\quad J_i=(f(z_i),\ldots,f^{(s_i)}(z_i)),\quad
+z_{j+1}=u_{j+1}(x;J_0,\ldots,J_j),
+\]
+con enteros fijos $s_i\ge0$ y aplicaciones parciales fijas $u_{j+1}:D_j\to\R$. Si la condición anterior vale para la proyección que conserva $x$ y las coordenadas de órdenes $S_i\subseteq\{0,\ldots,s_i\}$ en cada bloque, existe una realización reducida que conserva todas las entradas originalmente válidas y sus salidas. También basta imponerla en el conjunto de datos realizables que se desea conservar.
+\end{lemma}
+\begin{proof}
+\paso{1. Factorización.}
+Si existe $\bar u$, entonces $u(a,b)=\bar u(a)=u(a,b')$. Recíprocamente, para $a\in\pi(D)$, el conjunto
+\[
+G_a=\{u(a,b):(a,b)\in D\}
+\]
+es no vacío y, por \eqref{eq:projectioncriterion}, tiene un único elemento. Defínase $\bar u(a)$ como ese elemento. Entonces
+\[
+\bar u(\pi(a,b))=u(a,b),\qquad
+w\circ\pi=u\Longrightarrow w(a)=u(a,b)=\bar u(a).
+\]
+\paso{2. Etapas.}
+Si $\pi_j$ conserva $x$ y las coordenadas adquiridas en los bloques $0,\ldots,j$, se obtiene
+\[
+W_j=\pi_j(D_j),\qquad
+u_{j+1}(y)=\bar u_{j+1}(\pi_jy)\quad(y\in D_j),
+\]
+Denótese por $\pi_{S_i}J_i$ la lista de coordenadas de $J_i$ cuyos órdenes pertenecen a $S_i$, en orden creciente. La inducción se escribe
+\begin{align*}
+z_i^{\rm red}=z_i\ (i\le j)
+&\Longrightarrow B_i=\pi_{S_i}J_i\ (i\le j),\\
+y_j=(x;J_0,\ldots,J_j)\in D_j
+&\Longrightarrow\pi_jy_j=(x;B_0,\ldots,B_j)\in W_j,\\
+z_{j+1}^{\rm red}
+&=\bar u_{j+1}(\pi_jy_j)=u_{j+1}(y_j)=z_{j+1}.
+\end{align*}
+La base es $z_0^{\rm red}=x=z_0$. La inducción llega a la salida.
+\paso{3. Dominio restringido.}
+Para cualquier $D_j^*\subseteq D_j$, los pasos 1 y 2 se aplican a $u_{j+1}|_{D_j^*}$ si \eqref{eq:projectioncriterion} se cumple allí. Se conservan las ejecuciones cuyos datos pertenecen a esos conjuntos. No se afirma el recíproco $\pi_jy\in\pi_j(D_j^*)\Rightarrow y\in D_j^*$ ni se comprueba un argumento oculto.
+\end{proof}
+
+\begin{example}[Newton, una evaluación superflua y un patrón derivativo]\label{ex:operationalcounts}\label{ex:Jarratt}
+\paso{1. Newton.}
+Con $\ell=1$, $S_0=\{0,1\}$,
+\[
+W_0=\{(x,a,b):b\ne0\},\qquad\bar u_1(x,a,b)=x-a/b,
+\]
+la Proposición~\ref{prop:stages} da
+\[
+C_f(x)=x-f(x)/f'(x),\qquad(N_0,N_1,N)=(1,1,2).
+\]
+\paso{2. La misma salida con otro coste.}
+Con $S_0'=\{0,1,2\}$,
+\[
+W_0'=\{(x,a,b,c):b\ne0\},\qquad\bar u_1'(x,a,b,c)=x-a/b,
+\]
+se obtiene la misma salida y $(N_0',N_1',N_2',N')=(1,1,1,3)$. Por tanto
+\[
+C_f=C_f'\quad\not\Longrightarrow\quad N_{\mathscr C}=N_{\mathscr C'}.
+\]
+La adquisición de $f''(x)$ se cuenta en el segundo cálculo, aunque la salida no dependa de ella. Suprimirla define otro procedimiento.
+\paso{3. Una evaluación de $f$ y dos de $f'$.}
+Sean aplicaciones parciales fijas $Y:D_Y\subseteq\R^3\to\R$ y $Z:D_Z\subseteq\R^4\to\R$. El cálculo
+\[
+a=f(x),\quad b=f'(x),\quad y=Y(x,a,b),\quad c=f'(y),\quad z=Z(x,a,b,c)
+\]
+se realiza con $S_0=\{0,1\}$, $S_1=\{1\}$, $\bar u_1=Y$, $\bar u_2=Z$. Su conteo es $(N_0,N_1,N)=(1,2,3)$, antes de posibles reutilizaciones. No se adquiere $f(y)$. Añadir un argumento formal $e$ mediante $\widetilde Z(x,a,b,e,c)=Z(x,a,b,c)$ no obliga a adquirirlo: la proyección que elimina $e$ satisface el Lema~\ref{lem:projection}. Estas identidades son de representación; no se atribuye un orden a $Y,Z$ arbitrarias.
+\end{example}
+
+\subsection{Iteración por etapas y orden local de la comparación}
+\begin{definition}[Clase por etapas de la comparación]\label{def:KTclass}
+Se denota por $\Omega_{\rm KT}$ la clase por etapas utilizada en la v3.2 y tomada como transcripción matemática de la Sección 2 de \cite{KT1974}. Un elemento $\phi$ asigna a cada $f\in\DD$ una aplicación que cumple
+\begin{enumerate}[label=(\roman*)]
+\item $\phi(f):I_{\phi,f}\to I_{\phi,f}$, donde $I_{\phi,f}\subseteq I_f$ es un intervalo abierto y $\alpha_f\in I_{\phi,f}$;
+\item $\phi(f)(\alpha_f)=\alpha_f$;
+\item existe un intervalo abierto $I^0_{\phi,f}\subseteq I_{\phi,f}$, $\alpha_f\in I^0_{\phi,f}$, tal que
+\[
+x_0\in I^0_{\phi,f},\quad x_{k+1}=\phi(f)(x_k)
+\Longrightarrow x_k\longrightarrow\alpha_f;
+\]
+\item existen enteros $\ell\ge1$, $s_j\ge0$ y reglas parciales $u_{j+1}$, todos fijos antes de $f$, que representan localmente la salida por
+\begin{equation}\label{eq:KTstages}
+\begin{gathered}
+z_0=x,\qquad J_j=(f(z_j),\ldots,f^{(s_j)}(z_j)),\\
+z_{j+1}=u_{j+1}(x;J_0,\ldots,J_j)\quad(j<\ell),\qquad
+\phi(f)(x)=z_\ell.
+\end{gathered}
+\end{equation}
+Cada expresión y cada evaluación de esta representación existen en un entorno local de la raíz. Los dominios de las reglas son subconjuntos de los espacios finitos de argumentos correspondientes.
+\end{enumerate}
+La definición no asigna por sí sola un coste a todas las realizaciones de la misma aplicación.
+\end{definition}
+
+Para la comparación se conserva el exponente $p(\phi)>0$ del límite local reproducido en la v3.2 a partir de \cite[p.~644]{KT1974}:
+\begin{equation}\label{eq:KTorder}
+\lim_{x\to\alpha_f}\frac{\phi(f)(x)-\alpha_f}{(x-\alpha_f)^{p(\phi)}}=S(\phi,f)\in\R,
+\end{equation}
+para cada $f$, con $S(\phi,f)\ne0$ para alguna función. La prueba siguiente sólo usa su consecuencia por la derecha, donde la potencia real está definida. No interpreta potencias de bases negativas con exponentes arbitrarios ni sustituye un límite local por uno a lo largo de una trayectoria.
+
+\begin{lemma}[Límite por la derecha y cota local]\label{lem:rightbound}
+Si $p>0$ y $\phi(f)$ está definida en $(\alpha,\alpha+\rho)$ con
+\[
+\lim_{x\downarrow\alpha}\frac{\phi(f)(x)-\alpha}{(x-\alpha)^p}=S\in\R,
+\]
+entonces existen $C,\delta>0$ tales que $0<x-\alpha<\delta$ implica
+$|\phi(f)(x)-\alpha|\le C(x-\alpha)^p$.
+\end{lemma}
+\begin{proof}
+Por la definición de límite, con tolerancia uno,
+\[
+\exists\delta\in(0,\rho]\ \forall x,\qquad
+0<x-\alpha<\delta\Longrightarrow
+\left|\frac{\phi(f)(x)-\alpha}{(x-\alpha)^p}-S\right|<1.
+\]
+Por tanto
+\[
+\left|\frac{\phi(f)(x)-\alpha}{(x-\alpha)^p}\right|
+\le\left|\frac{\phi(f)(x)-\alpha}{(x-\alpha)^p}-S\right|+|S|
+<1+|S|=:C.
+\]
+Multiplicar por $(x-\alpha)^p>0$ da la afirmación.
+\end{proof}
+
+\subsection{Cota matemática para todo coste operacional realizado}
+\begin{theorem}[Barrera para realizaciones locales]\label{thm:operationalbarrier}\label{cor:KT}
+Sea $\mathfrak C=(\phi,\mathscr C,\mathcal U)$ una realización local sobre $\DD$ con presupuesto $n\ge1$. Supóngase que, para algún $p>0$,
+\begin{equation}\label{eq:rightlocalorder}
+\forall f\in\DD\ \exists C_f,\varepsilon_f>0\ \forall x,\qquad
+0<x-\alpha_f<\varepsilon_f\Longrightarrow
+|\phi(f)(x)-\alpha_f|\le C_f(x-\alpha_f)^p.
+\end{equation}
+Entonces
+\begin{equation}\label{eq:operationalbound}
+p\le2^{n-1}.
+\end{equation}
+No se requiere que $n$ sea un presupuesto global del procedimiento, que las reglas sean continuas o computables ni que exista un perfil fijo por órdenes.
+\end{theorem}
+\begin{proof}
+\paso{1. Representación.}
+Por el Teorema~\ref{thm:exactrepresentation}, $T=T_{\mathscr C,n}$ tiene presupuesto $n$ y
+\[
+(f,x)\in\mathcal U\Longrightarrow T_f(x)=C_f(x)=\phi(f)(x).
+\]
+Por el Lema~\ref{lem:extension}, existe la extensión total $\widetilde T$ con el mismo presupuesto. Su construcción y la de $T$ anteceden a $f$.
+\paso{2. Hipótesis de contradicción.}
+Si $p>q:=2^{n-1}$, el Teorema~\ref{thm:main} proporciona $F\in\ER$, $\alpha$ y $(x_m)$ con
+\[
+\alpha\in(-1/2,1/2),\quad F(\alpha)=0,\quad F'(u)>1/2\quad(u\in[-1,1]),
+\]
+\begin{equation}\label{eq:operationaldivergence}
+x_m>\alpha,\quad x_m\to\alpha,\qquad
+\frac{|\widetilde T_F(x_m)-\alpha|}{(x_m-\alpha)^p}\longrightarrow+\infty.
+\end{equation}
+\paso{3. Restricción.}
+Pónganse $I_0=(-1,1)$ y $f=F|_{I_0}$. Por el Lema~\ref{lem:real},
+\[
+f\text{ es real analítica},\quad f(\alpha)=0,\quad \alpha\in I_0,
+\quad f'=F'|_{I_0}>1/2>0.
+\]
+Por la Definición~\ref{def:localclass}, $f\in\DD$ y su raíz distinguida es $\alpha$.
+\paso{4. Un único problema y sus radios.}
+Por \eqref{eq:localset}, existe $\delta_f>0$ tal que
+\[
+0<|x-\alpha|<\delta_f\Longrightarrow (f,x)\in\mathcal U
+\Longrightarrow T_f(x)=\phi(f)(x).
+\]
+El Lema~\ref{lem:restriction} da, en las mismas entradas,
+\[
+\widetilde T_F(x)=T_f(x)=\phi(f)(x).
+\]
+Por \eqref{eq:rightlocalorder}, existen $C_f,\varepsilon_f>0$ para esta misma función. Como $x_m>\alpha$ y $x_m\to\alpha$,
+\[
+\exists m_0\ \forall m\ge m_0,\qquad
+0<x_m-\alpha<\min\{\delta_f,\varepsilon_f\}.
+\]
+\paso{5. Contradicción.}
+Para $m\ge m_0$,
+\[
+\frac{|\widetilde T_F(x_m)-\alpha|}{(x_m-\alpha)^p}
+=\frac{|\phi(f)(x_m)-\alpha|}{(x_m-\alpha)^p}
+\le C_f,
+\]
+en contradicción con \eqref{eq:operationaldivergence}. Por tanto $p\le2^{n-1}$.
+\end{proof}
+
+\begin{corollary}[Perfil fijo y presupuesto total]\label{cor:profilebound}
+Sea $\mathfrak C$ una realización local de $\phi\in\Omega_{\rm KT}$ con el orden de \eqref{eq:KTorder}.
+Si su coste total es finito y positivo, entonces
+\[
+p(\phi)\le2^{v(\mathfrak C)-1}.
+\]
+Si tiene perfil fijo, se obtiene
+\[
+p(\phi)\le2^{\sum_{r\ge0}v_r(\mathfrak C)-1}.
+\]
+Para un cálculo con ramas basta cualquier presupuesto total local $n\ge1$; no es necesario sumar máximos por órdenes.
+\end{corollary}
+\begin{proof}
+Por el Lema~\ref{lem:costprofile},
+\[
+n:=v(\mathfrak C)\in\N,\qquad
+(f,x)\in\mathcal U\Longrightarrow N_{\mathscr C}(f,x)\le n.
+\]
+Además,
+\[
+\eqref{eq:KTorder}\ \overset{\text{Lema }\ref{lem:rightbound}}{\Longrightarrow}\
+\eqref{eq:rightlocalorder}\text{ con }p=p(\phi).
+\]
+Por el Teorema~\ref{thm:operationalbarrier},
+\[
+p(\phi)\le2^{n-1}=2^{v(\mathfrak C)-1}.
+\]
+Si el perfil es fijo, \eqref{eq:fixedprofile} da
+\[
+v(\mathfrak C)=\sum_rv_r(\mathfrak C)
+\Longrightarrow p(\phi)\le2^{\sum_rv_r(\mathfrak C)-1}.
+\]
+Para cualquier presupuesto local $n\ge1$, la primera desigualdad $N_{\mathscr C}\le n$ permite aplicar directamente el mismo teorema.
+\end{proof}
+
+\subsection{Corolario Conjetura Traub y separación de la atribución histórica}
+\begin{corollary}[Conjetura Traub: formulación operacional]\label{cor:traub}
+Sea $\mathfrak C=(\phi,\mathscr C,\mathcal U)$ una realización local de una iteración $\phi\in\Omega_{\rm KT}$ con el orden $p(\phi)>0$ de \eqref{eq:KTorder}. Denótese por
+\[
+v(\phi;\mathscr C,\mathcal U):=v(\mathfrak C)
+\]
+el coste total del cálculo fijado, y supóngase $1\le v(\mathfrak C)<\infty$. Entonces
+\begin{equation}\label{eq:Traubfinal}
+p(\phi)\le 2^{v(\phi;\mathscr C,\mathcal U)-1}.
+\end{equation}
+Cuando la notación publicada $v(\phi)$ se aplica a este conteo de evaluaciones, puede abreviarse la desigualdad como
+\[
+p(\phi)\le2^{v(\phi)-1}.
+\]
+Esta abreviatura no elimina el cálculo que se está contando.
+\end{corollary}
+\begin{proof}
+\paso{1. Coste realizado.}
+Por las Definiciones~\ref{def:used} y \ref{def:realizedcost} y el Lema~\ref{lem:costprofile},
+\[
+n:=v(\phi;\mathscr C,\mathcal U)\in\N,
+\qquad
+\forall(f,x)\in\mathcal U:\quad N_{\mathscr C}(f,x)\le n.
+\]
+\paso{2. Igualdad de costes en la representación.}
+El Teorema~\ref{thm:exactrepresentation} proporciona $T_{\mathscr C,n}$ y
+\[
+(f,x)\in\mathcal U\Longrightarrow
+\begin{cases}
+(T_{\mathscr C,n})_f(x)=\phi(f)(x),\\
+\nu_{T_{\mathscr C,n},f}(x)=N_{\mathscr C}(f,x)\le n.
+\end{cases}
+\]
+\paso{3. Orden y contradicción ya probada.}
+\[
+\eqref{eq:KTorder}\ \overset{\text{Lema }\ref{lem:rightbound}}{\Longrightarrow}\ \eqref{eq:rightlocalorder}
+\ \overset{\text{Teorema }\ref{thm:operationalbarrier}}{\Longrightarrow}\
+p(\phi)\le2^{n-1}.
+\]
+Sustituir $n=v(\phi;\mathscr C,\mathcal U)$ da \eqref{eq:Traubfinal}. Si $v(\phi)$ designa ese mismo coste, la sustitución es una abreviatura de una igualdad de cantidades, no una nueva inferencia sobre un entero abstracto.
+\end{proof}
+
+\begin{remark}[Resultado formal e identificación histórica]\label{rem:historical}
+El título anterior remite a la desigualdad de la Conjetura 8.1 de Kung y Traub; la atribución es conjunta. El cotejo incorporado en la v3.2 documenta que la fuente cuenta evaluaciones por paso y fija funciones de etapa comunes a los problemas \cite[pp.~644--645, 649]{KT1974}. La Definición~\ref{def:used} adopta una semántica operacional explícita para esas adquisiciones.
+
+Son afirmaciones distintas:
+\[
+\underbrace{(\phi,\mathscr C,\mathcal U)\text{ realiza un coste }n}_{\text{objeto matemático definido}}
+\Longrightarrow p(\phi)\le2^{n-1},
+\]
+\[
+\underbrace{v(\phi)\text{ de la fuente corresponde a ese coste}}_{\text{identificación del objeto contado}}.
+\]
+La primera tiene la demostración anterior. La segunda debe justificarse mediante el cálculo al que se aplica el conteo y la lectura de la fuente. No se deriva por renombrar una definición, por la mera notación $v(\phi)$ ni por un dictamen de auditoría. El enunciado no afirma una equivalencia universal entre todas las lecturas posibles del coste original y la Definición~\ref{def:realizedcost}.
+
+El antecedente de 1972 separa adquisición y combinación de datos \cite[pp.~168--169]{Traub1972}; se mantiene sólo como contexto documental. Ni esa fuente ni la de 1974 se usan como premisas de las pruebas nuevas de representación. El Apéndice~\ref{app:documentary} conserva los localizadores heredados de la v3.2 y delimita la atribución.
+\end{remark}
+
+\clearpage
+\section{Relación con el orden \texorpdfstring{$Q$}{Q}}\label{sec:Q}
+
+\subsection{Operador de error y orden de una trayectoria}
+\begin{definition}[Operador de error y prolongación]\label{def:errorop}
+Para una función fija $f$ con raíz $\alpha$, se define su \emph{operador de error} en los puntos donde la salida existe por
+\[
+\psi(e)=T_f(\alpha+e)-\alpha,\qquad
+\alpha+e\in\Omega_{T,f}.
+\]
+Una \emph{prolongación en cero} es una función definida en un intervalo $(-\delta,\delta)$ que coincide con ese operador para $e\ne0$ y a la que se asigna el valor $\psi(0)=0$. Si es de clase $C^s$, se dice que el operador admite una prolongación $C^s$. Esta condición se refiere al operador final, no sólo a $f$.
+\end{definition}
+
+\begin{definition}[Orden $Q$ exacto]\label{def:Qorder}
+Una sucesión $(e_\ell)_{\ell\ge0}$ que satisface $e_{\ell+1}=\psi(e_\ell)$ se llama \emph{trayectoria de errores}. Es \emph{no terminante} si $e_\ell\ne0$ para todo $\ell$. Si además $e_\ell\to0$, tiene \emph{orden $Q$ exacto $p>1$} si existe $L\in(0,\infty)$ tal que
+\[
+\lim_{\ell\to\infty}\frac{|e_{\ell+1}|}{|e_\ell|^p}=L.
+\]
+El número $L$ se llama \emph{constante asintótica de esa trayectoria}.
+\end{definition}
+
+Para una función $r$ definida cerca de cero y $s>0$, se escribe $r(e)=o(|e|^s)$ si $r(e)/|e|^s\to0$ cuando $e\to0$, $e\ne0$. Se escribe $r(e)=O(|e|^s)$ si existen $C,\delta>0$ tales que $|r(e)|\le C|e|^s$ para $0<|e|<\delta$.
+
+\subsection{Fórmula de Taylor necesaria}
+\begin{lemma}[Taylor con resto local e identidad integral]\label{lem:taylor}
+Sea $s\in\N$ y $\psi\in C^s((-\delta,\delta))$. Entonces
+\begin{equation}\label{eq:taylor}
+\psi(e)=\sum_{j=0}^s\frac{\psi^{(j)}(0)}{j!}e^j+o(|e|^s).
+\end{equation}
+Si $\psi(0)=\cdots=\psi^{(s-1)}(0)=0$, también
+\begin{equation}\label{eq:integraltaylor}
+\psi(e)=\frac1{(s-1)!}\int_0^e(e-u)^{s-1}\psi^{(s)}(u)\,du.
+\end{equation}
+\end{lemma}
+\begin{proof}
+\paso{1. Identidad integral.}
+Para $s\ge1$, póngase
+\[
+I_s(e)=\frac1{(s-1)!}\int_0^e(e-u)^{s-1}\psi^{(s)}(u)\,du.
+\]
+El teorema fundamental del cálculo y la integración por partes dan
+\[
+I_1(e)=\psi(e)-\psi(0),\qquad
+I_s(e)=-\frac{e^{s-1}\psi^{(s-1)}(0)}{(s-1)!}+I_{s-1}(e)\quad(s\ge2).
+\]
+Sumando las identidades,
+\[
+\psi(e)=\sum_{j=0}^{s-1}\frac{\psi^{(j)}(0)}{j!}e^j+I_s(e).
+\]
+Si las derivadas indicadas se anulan, resulta \eqref{eq:integraltaylor}.
+\paso{2. Resto.}
+Con $u=et$, también para $e<0$ con la orientación de la integral,
+\[
+I_s(e)=\frac{e^s}{(s-1)!}\int_0^1(1-t)^{s-1}\psi^{(s)}(et)\,dt.
+\]
+Poniendo $R_s(e)=I_s(e)-\psi^{(s)}(0)e^s/s!$, se tiene
+\[
+|R_s(e)|\le\frac{|e|^s}{s!}
+\sup_{|u|\le|e|}|\psi^{(s)}(u)-\psi^{(s)}(0)|=o(|e|^s),
+\]
+por continuidad de $\psi^{(s)}$ en cero. Sustituir $I_s$ da \eqref{eq:taylor}.
+\end{proof}
+
+\subsection{De una trayectoria al comportamiento local}
+\begin{theorem}[Término principal a partir de orden $Q$]\label{thm:Qprincipal}
+Sea $\psi\in C^s$ cerca de cero, con $s\in\N$ y $\psi(0)=0$. Si existe una trayectoria no terminante convergente con orden $Q$ exacto $p$, donde $1<p\le s$, entonces $p$ es entero y
+\[
+\psi(e)=a_pe^p+o(|e|^p),\qquad
+ a_p=\frac{\psi^{(p)}(0)}{p!}\ne0.
+\]
+La constante de orden $Q$ es $|a_p|$. Recíprocamente, esa expansión con $a_p\ne0$ implica el mismo orden $Q$ para toda trayectoria no terminante que converja a cero.
+\end{theorem}
+\begin{proof}
+\paso{1. Existencia de un coeficiente no nulo.}
+Si $\psi^{(j)}(0)=0$ para $1\le j\le s$, el Lema~\ref{lem:taylor} implica
+\[
+\psi(e)=o(|e|^s),\qquad
+\frac{|\psi(e_\ell)|}{|e_\ell|^p}
+=\frac{|\psi(e_\ell)|}{|e_\ell|^s}|e_\ell|^{s-p}\to0,
+\]
+porque $s-p\ge0$. Esto contradice el límite $L\in(0,\infty)$ de la Definición~\ref{def:Qorder}.
+\paso{2. Primer coeficiente.}
+Sea $r=\min\{j\in\{1,\ldots,s\}:\psi^{(j)}(0)\ne0\}$. Taylor da
+\[
+\psi(e)=a_re^r+o(|e|^r),\qquad a_r=\psi^{(r)}(0)/r!\ne0.
+\]
+Así
+\[
+\frac{|\psi(e_\ell)|}{|e_\ell|^p}
+=|e_\ell|^{r-p}(|a_r|+o(1))\longrightarrow
+\begin{cases}+\infty,&r<p,\\|a_r|,&r=p,\\0,&r>p.
+\end{cases}
+\]
+El límite finito positivo exige $p=r\in\N$ y $L=|a_p|$.
+\paso{3. Recíproco.}
+Si $\psi(e)=a_pe^p+o(|e|^p)$ y $a_p\ne0$, entonces para toda trayectoria no nula convergente
+\[
+\frac{|e_{\ell+1}|}{|e_\ell|^p}
+=\frac{|\psi(e_\ell)|}{|e_\ell|^p}\to|a_p|\in(0,\infty).
+\]
+\end{proof}
+
+\begin{lemma}[Implicación suficiente para aplicar la cota]\label{lem:Qbridge}
+Sea $q\ge1$ entero y $\psi\in C^{q+1}$ cerca de cero, con $\psi(0)=0$. Si existe una trayectoria no terminante convergente de orden $Q$ exacto $p_0>q$, entonces
+\[
+\psi^{(j)}(0)=0\quad(1\le j\le q),\qquad
+|\psi(e)|\le C|e|^{q+1}
+\]
+en algún entorno de cero y para alguna constante $C>0$.
+\end{lemma}
+\begin{proof}
+Si existe $r\le q$ mínimo con $\psi^{(r)}(0)\ne0$, el Lema~\ref{lem:taylor} da
+\[
+\psi(e)=a_re^r+o(|e|^r),\quad a_r\ne0,\qquad
+\frac{|\psi(e_\ell)|}{|e_\ell|^{p_0}}
+=|e_\ell|^{r-p_0}(|a_r|+o(1))\to+\infty,
+\]
+porque $r\le q<p_0$. Contradice el orden $Q$ exacto; luego $\psi^{(j)}(0)=0$ para $j\le q$.
+Elíjase $\delta>0$ con $[-\delta,\delta]$ contenido en el entorno de clase $C^{q+1}$, y póngase
+\[
+M=\max_{|u|\le\delta}|\psi^{(q+1)}(u)|<\infty.
+\]
+Por \eqref{eq:integraltaylor},
+\[
+|\psi(e)|\le\frac{M}{q!}\left|\int_0^e(e-u)^q\,du\right|
+=\frac{M}{(q+1)!}|e|^{q+1}\quad(|e|\le\delta).
+\]
+Sirve $C=\max\{1,M/(q+1)!\}$. No se utilizó $p_0\le q+1$.
+\end{proof}
+
+\begin{corollary}[Cota del orden $Q$ con regularidad del operador]\label{cor:Qbound}
+Sea $T$ de presupuesto $d\ge1$ para $\DD$, definido en un entorno perforado completo de cada raíz, y sea $q=2^{d-1}$. Supóngase que todo operador de error $\psi_f$ admite una prolongación $C^{q+1}$ en cero. Sea $p>1$. Si para cada $f\in\DD$ se cumple al menos una de las condiciones
+\begin{enumerate}[label=(\alph*)]
+\item $\psi_f$ es idénticamente cero en algún entorno de cero;
+\item existe una trayectoria no terminante convergente con orden $Q$ exacto $p_f\ge p$,
+\end{enumerate}
+entonces $p\le2^{d-1}$.
+\end{corollary}
+\begin{proof}
+Supóngase $p>q$. Para cada $f\in\DD$,
+\[
+\begin{cases}
+\text{(a)}\Rightarrow |\psi_f(e)|=0\le|e|^{q+1}\text{ cerca de cero},\\
+\text{(b)}\Rightarrow p_f\ge p>q
+\overset{\text{Lema }\ref{lem:Qbridge}}{\Longrightarrow}
+|\psi_f(e)|\le C_f|e|^{q+1}\text{ cerca de cero}.
+\end{cases}
+\]
+Intersectar ese entorno con el de definición del método produce
+\[
+\forall f\in\DD\ \exists C_f,\delta_f>0:\quad
+0<|x-\alpha_f|<\delta_f\Longrightarrow
+x\in\Omega_{T,f},\quad |T_f(x)-\alpha_f|\le C_f|x-\alpha_f|^{q+1}.
+\]
+Por el Teorema~\ref{thm:analyticbound}, $q+1\le2^{d-1}=q$, contradicción.
+\end{proof}
+
+\subsection{Por qué la continuidad no basta}
+\begin{example}[Órdenes local y de trayectoria diferentes]\label{ex:orders}
+Defínase
+\[
+\psi(e)=\begin{cases}-e^2,&e\ge0,\\-e^4,&e<0.\end{cases}
+\]
+Esta función es $C^1$. En efecto, es continua en cero, y
+\[
+\psi'(0)=\lim_{e\to0}\frac{\psi(e)}e=0,
+\]
+pues los cocientes son $-e$ para $e>0$ y $-e^3$ para $e<0$. Fuera de cero, las derivadas son $-2e$ y $-4e^3$, respectivamente, y ambas tienden a cero; por tanto $\psi'$ es continua.
+
+Si $0<|e_0|<1$, entonces $-1<e_1<0$. Para todo $\ell\ge1$, se mantiene $-1<e_\ell<0$ y
+\[
+|e_{\ell+1}|=|e_\ell|^4.
+\]
+Los módulos son positivos y estrictamente decrecientes. Su límite $b$ satisface $0\le b<1$ y $b=b^4$, de donde $b=0$. Las trayectorias son no terminantes y tienen orden $Q$ exacto cuatro, con constante uno.
+
+Sin embargo, para $e>0$,
+\[
+\frac{|\psi(e)|}{|e|^4}=e^{-2}\longrightarrow+\infty.
+\]
+No existe una cota local de un paso con exponente cuatro. Este ejemplo es un operador de error abstracto; no se presenta como método de consultas sobre funciones desconocidas.
+\end{example}
+
+\begin{remark}[Terminación finita y regularidad]
+Si una trayectoria alcanza cero, el cociente de la Definición~\ref{def:Qorder} deja de estar definido en el índice cuyo denominador es cero. No se le asigna por ello un orden $Q$ exacto infinito. La alternativa (a) del Corolario~\ref{cor:Qbound} es más fuerte: exige salida exacta desde todo un entorno, no sólo que una trayectoria alcance la raíz.
+
+La analiticidad de $f$ no se utilizó para deducir regularidad de $\psi_f$. Ésta es una hipótesis separada del corolario. El Teorema~\ref{thm:analyticbound} y el Teorema~\ref{thm:operationalbarrier} no requieren esa hipótesis.
+\end{remark}
+
+\par\bigskip
+\section{Dependencias, cuantificadores y alcance}\label{sec:dependencies}
+
+\subsection{Cadena matemática}
+Las dependencias se organizan mediante
+\[
+\begin{aligned}
+&\text{Lemas }\ref{lem:division}\text{--}\ref{lem:perturb}
+\Longrightarrow\text{Proposición }\ref{prop:stage}
+\Longrightarrow\text{Lemas }\ref{lem:construction}\text{--}\ref{lem:limitrecords}
+\Longrightarrow\text{Teorema }\ref{thm:main},\\
+&\text{Teorema }\ref{thm:exactrepresentation},\ \text{Lemas }\ref{lem:extension},\ref{lem:restriction},\ \text{Teorema }\ref{thm:main}
+\Longrightarrow\text{Teorema }\ref{thm:operationalbarrier},\\
+&\text{Lema }\ref{lem:rightbound},\ \text{Teorema }\ref{thm:operationalbarrier}
+\Longrightarrow\text{Corolarios }\ref{cor:profilebound},\ref{cor:traub}.
+\end{aligned}
+\]
+El Teorema~\ref{thm:exactrepresentation} no usa la Proposición~\ref{prop:stage} ni el Teorema~\ref{thm:main}. El cotejo histórico no es una premisa de la construcción de $F$.
+
+\subsection{Cuantificadores y conservación}
+En la etapa finita y en la construcción infinita, respectivamente,
+\[
+\forall(f,P,R,\varepsilon)\ \exists(c,\tau)>0\ \forall t\in(0,\tau)\ \exists(g,b),
+\]
+\[
+(f_{m-1},P_{m-1},R_m,\varepsilon_m)
+\longrightarrow(c_m,\tau_m)\longrightarrow t_m
+\longrightarrow(f_m,\alpha_m,a_m,h_m).
+\]
+La elección \eqref{eq:choose-tm} no requiere $\inf_m c_m>0$. Los Lemas~\ref{lem:limitrecords} y \ref{lem:preserve} dan
+\[
+\bigl[\,F^{(r)}(y)=f_m^{(r)}(y)\text{ para toda consulta }(y,r)\text{ de }\Rec_m\,\bigr]
+\Longrightarrow T_F(x_m)=T_{f_m}(x_m).
+\]
+No se pasa al límite en una regla $\Phi_k$. En la representación,
+\[
+(\mathscr C,n)\longrightarrow T_{\mathscr C,n},\qquad
+\forall f\ \exists\delta_f>0;
+\]
+ni $\delta_f$, ni $\alpha_f$, ni $I_f$ son entradas del procedimiento. No se sustituye una elección común de $\mathscr C$ por $\forall f\ \exists\mathscr C_f$.
+
+\subsection{Coste total y perfiles}
+Para $\mathfrak C=(\phi,\mathscr C,\mathcal U)$,
+\[
+\begin{gathered}
+N_{\mathscr C}=\sum_rN_{\mathscr C,r},\qquad
+v(\mathfrak C)=\sup_{\mathcal U}\sum_rN_{\mathscr C,r}
+\le\sum_r\sup_{\mathcal U}N_{\mathscr C,r},\\
+N_{\mathscr C,r}\equiv c_r\text{ en }\mathcal U
+\Longrightarrow v(\mathfrak C)=\sum_r c_r.
+\end{gathered}
+\]
+La primera igualdad es puntual; la última requiere perfil fijo. El Ejemplo~\ref{ex:branchcost} muestra que la desigualdad intermedia puede ser estricta.
+
+\subsection{Alcance}
+La cota exige un exponente local común a toda $\DD$. No excluye la recuperación exacta en una familia restringida: para $f_a(z)=z-a$,
+\[
+x-E_{f_a}(x,0)=x-(x-a)=a.
+\]
+El Teorema~\ref{thm:operationalbarrier} trata realizaciones con presupuesto; el Corolario~\ref{cor:traub} conserva la realización al escribir la notación del coste. Definir ese coste no prueba una equivalencia histórica universal. No se estudian redondeo, coste aritmético ni implementaciones eficientes de las elecciones existenciales. El estado de demostración propuesta para revisión se mantiene para el Teorema~\ref{thm:main} y sus consecuencias.
+
+\clearpage
+\appendix
+
+\section{Una cota inferior para la constante de concentración}\label{app:constant}
+
+\begin{example}[El valor uno no sirve siempre]\label{ex:constant}
+Para $\delta>0$ sean
+\[
+h(z)=z^2-\delta^2,\qquad g(z)=z^3-9\delta^2z,\qquad
+V=\spanop_\C\{h,g\}\subseteq\PP_3(\C),
+\]
+donde $\spanop_\C\{h,g\}=\{ah+bg:a,b\in\C\}$. Toda constante $C_{3,2}$ que satisfaga el Lema~\ref{lem:concentration} debe cumplir $C_{3,2}\ge\sqrt3$.
+\end{example}
+\begin{proof}
+\paso{1. Dimensión y ceros.}
+\[
+a h+b g=0\Longrightarrow b=0\quad(\text{coeficiente de }z^3)
+\Longrightarrow a=0\quad(\text{coeficiente de }z^2).
+\]
+Luego $\dim V=2$. Además $h(\delta)=h(-\delta)=0$, con ambos ceros en $|z|\le\delta$.
+\paso{2. Wronskiano.}
+\begin{align*}
+W_V(z)&=h(z)g'(z)-h'(z)g(z)\\
+&=(z^2-\delta^2)(3z^2-9\delta^2)-2z(z^3-9\delta^2z)\\
+&=z^4+6\delta^2z^2+9\delta^4=(z^2+3\delta^2)^2.
+\end{align*}
+Sus ceros son $\pm i\sqrt3\,\delta$, ambos dobles y de módulo $\sqrt3\,\delta$. El Lema~\ref{lem:concentration} exige un cero de módulo a lo sumo $C_{3,2}\delta$. Por tanto
+\[
+\sqrt3\,\delta\le C_{3,2}\delta,\quad\delta>0
+\Longrightarrow C_{3,2}\ge\sqrt3.
+\]
+\end{proof}
+
+El ejemplo sólo prueba una cota inferior. No identifica la mejor constante posible y no reemplaza la demostración de existencia de una constante finita en el Lema~\ref{lem:concentration}.
+
+\clearpage
+\section{Una misma función para todos los exponentes superiores}\label{app:allp}
+
+\begin{proposition}[Función y sucesión independientes del exponente final]\label{prop:allp}
+Sea $T$ un método total de presupuesto $d\ge1$ y sea $q=2^{d-1}$. Existen $F\in\ER$, $\alpha\in(-1/2,1/2)$ y una sucesión $x_m>\alpha$, $x_m\to\alpha$, tales que
+\[
+F(\alpha)=0,\qquad F'(u)>1/2\quad(-1\le u\le1),
+\]
+y, simultáneamente para cada real $p>q$,
+\[
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}\longrightarrow+\infty.
+\]
+\end{proposition}
+\begin{proof}
+\paso{1. Exponentes y datos iniciales.}
+Por el Lema~\ref{lem:padding}, úsese un método de exactamente $d$ consultas con las mismas salidas. Fíjense
+\[
+p_m=q+\frac1m,\qquad f_0(z)=z,\qquad\alpha_0=0,\qquad S_0=\varnothing.
+\]
+El exponente $p>q$ de la conclusión no se elige todavía.
+\paso{2. Paso inductivo.}
+Supónganse construidos los índices menores que $m$, con $\alpha_{m-1}\notin S_{m-1}$ y $h_i>0$. Defínanse
+\[
+R_m=m+3,\quad\varepsilon_m=2^{-m-10}\min\{1,h_1,\ldots,h_{m-1}\},
+\quad
+P_{m-1}(z)=\prod_{i<m}\prod_{j=1}^d(z-z_{i,j})^{r_{i,j}+1}.
+\]
+Entonces $P_{m-1}(\alpha_{m-1})\ne0$. Para $m>1$,
+\[
+\|f_{m-1}-z\|_3<\sum_{i<m}2^{-i-10}<2^{-10}
+\Longrightarrow |f_{m-1}'(u)-1|<2^{-10}\quad(u\in[-1,1]),
+\]
+por el Lema~\ref{lem:cauchy}. Los signos en $\pm1/2$ y la positividad de la derivada dan la única raíz, y
+\[
+|\alpha_{m-1}|=|\alpha_{m-1}-f_{m-1}(\alpha_{m-1})|<2^{-10}.
+\]
+Para $m=1$ se verifican directamente esas condiciones sobre $f_0=z$.
+La Proposición~\ref{prop:stage} da $c_m,\tau_m>0$; redúzcase $c_m$ a $\min\{c_m,1/8\}$. Elíjase
+\begin{equation}\label{eq:allpchoose}
+0<t_m<\min\left\{\tau_m,2^{-m},\tfrac14,
+\left(\frac{c_m}{2^{p_m+1}m}\right)^{1/(p_m-q)}\right\}.
+\end{equation}
+Como $p_m-q=1/m>0$, todos los términos del mínimo son positivos y
+\begin{equation}\label{eq:allpquotient}
+a_m:=c_mt_m^q>0,\qquad c_mt_m^{q-p_m}\ge2^{p_m+1}m.
+\end{equation}
+Con $x_m=\alpha_{m-1}+t_m$, la misma proposición produce
+\[
+\|f_m-f_{m-1}\|_{R_m}<\varepsilon_m,\quad P_{m-1}\mid(f_m-f_{m-1}),
+\]
+\[
+|\alpha_m-\alpha_{m-1}|<t_m/8,\quad
+|T_{f_m}(x_m)-\alpha_m|\ge a_m,\quad\alpha_m\notin S_m.
+\]
+El Lema~\ref{lem:oldfactor} conserva las consultas antiguas. La cota
+\[
+|\alpha_m|<2^{-10}+1/32<1/2
+\]
+localiza la raíz construida. Sumar las normas hasta $m$ y repetir la estimación anterior da
+\[
+\|f_m-z\|_3<2^{-10},\quad f_m'>1/2\text{ en }[-1,1],\quad |\alpha_m|<2^{-10}.
+\]
+La finitud de $S_m$ implica
+\[
+h_m=\tfrac12\min\{1,a_m,t_m,\dist(\alpha_m,S_m)\}>0.
+\]
+La inducción queda cerrada sin aplicar el Lema~\ref{lem:construction} con un exponente variable.
+\paso{3. Límites.}
+Para cada $R>0$ y $\ell>m$ suficientemente grandes,
+\[
+\|f_\ell-f_m\|_R\le\sum_{j=m+1}^\ell\varepsilon_j
+\le\sum_{j>m}2^{-j-10}\to0.
+\]
+Por completitud y el Lema~\ref{lem:analyticlimit}, existe $F\in\ER$ con convergencia uniforme de funciones y derivadas en discos. Se tiene
+\[
+\|F-z\|_3\le2^{-10},\quad |F'(u)-1|\le2^{-10}\ (u\in[-1,1]).
+\]
+Los signos en $\pm1/2$ y $F'>1/2$ dan una única raíz $\alpha$ en ese intervalo. Para $\ell>m$, el valor medio da
+\[
+|\alpha_\ell-\alpha_m|\le2|f_\ell(\alpha_m)|
+\le2\sum_{j=m+1}^\ell\varepsilon_j.
+\]
+Así $\alpha_m\to\alpha$: el límite de las raíces está en $[-2^{-10},2^{-10}]$ y satisface $F=0$ por continuidad y convergencia uniforme. Para $j>m$, $\varepsilon_j\le2^{-j-10}h_m$, de donde
+\begin{equation}\label{eq:allptail}
+|\alpha-\alpha_m|\le2\sum_{j>m}\varepsilon_j
+\le2^{-m-9}h_m<h_m/4.
+\end{equation}
+\paso{4. Registros y cociente diagonal.}
+Para cada consulta $(y,r)$ del registro de la etapa $m$ y cada $\ell>m$,
+\[
+(z-y)^{r+1}\mid P_{\ell-1}\mid(f_\ell-f_{\ell-1})
+\Longrightarrow(f_\ell-f_{\ell-1})^{(r)}(y)=0.
+\]
+Sumando y pasando al límite,
+\[
+f_L^{(r)}(y)=f_m^{(r)}(y)\ (L\ge m)
+\Longrightarrow F^{(r)}(y)=f_m^{(r)}(y)
+\Longrightarrow T_F(x_m)=T_{f_m}(x_m),
+\]
+por los Lemas~\ref{lem:analyticlimit} y \ref{lem:preserve}. Por \eqref{eq:allptail} y los márgenes,
+\[
+|T_F(x_m)-\alpha|\ge a_m/2,
+\]
+\[
+x_m-\alpha=t_m+(\alpha_{m-1}-\alpha_m)+(\alpha_m-\alpha),
+\quad0<\frac58t_m<x_m-\alpha<\frac{11}{8}t_m<2t_m<1.
+\]
+Luego $x_m>\alpha$, $x_m\to\alpha$ y
+\begin{equation}\label{eq:allpdiag}
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^{p_m}}
+\ge\frac{c_m}{2^{p_m+1}}t_m^{q-p_m}\ge m.
+\end{equation}
+\paso{5. Todos los exponentes.}
+Sea ahora $p>q$. Como $p_m\downarrow q$,
+\[
+\exists m_0\ \forall m\ge m_0:\quad p_m\le p.
+\]
+Para $0<e<1$, $e^{-p}\ge e^{-p_m}$. Tomando $e=x_m-\alpha$,
+\[
+\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^p}
+\ge\frac{|T_F(x_m)-\alpha|}{|x_m-\alpha|^{p_m}}\ge m\to+\infty.
+\]
+$F$, $\alpha$ y $(x_m)$ se construyeron antes de elegir $p$. El Lema~\ref{lem:padding} restituye, cuando corresponde, las salidas del método original.
+\end{proof}
+
+La proposición cambia el orden de cuantificadores de la conclusión:
+\[
+\forall T\ \exists(F,\alpha,(x_m))\ \forall p>2^{d-1}.
+\]
+No afirma unicidad de $F$ ni monotonía de $(x_m)$. No se utiliza retroactivamente en la prueba del Teorema~\ref{thm:main} ni en los corolarios de las Secciones~\ref{sec:KT} y \ref{sec:Q}.
+
+\par\bigskip
+\section{Cambios de la versión 3.3 y correspondencia con la versión 3.2}\label{app:changes}
+
+\subsection{Base y alcance de la edición}
+El archivo de partida es \texttt{Manuscrito\_Kung\_Traub\_v3\_2\_integrado.tex}. Se conserva el orden de las Secciones 1--7 y 9, los enunciados de su núcleo analítico, el Teorema~\ref{thm:main} y los Apéndices A y B. La edición de las demostraciones de esas partes sustituye explicaciones narrativas por pasos, fórmulas y referencias internas; no incorpora una auditoría independiente ni declara un nuevo resultado analítico.
+
+La Sección~\ref{sec:KT} se reconstruye desde la tupla del procedimiento. Se distinguen la aplicación $\phi$, su cálculo $\mathscr C$ y el conjunto local $\mathcal U$. El coste se atribuye a la terna $\mathfrak C$, no se supone intrínseco a $\phi$. Se cuentan adquisiciones, incluidas las que resulten superfluas; se diferencian una llamada repetida y el uso interno de un valor almacenado.
+
+La nueva definición total no suma máximos de ramas distintas. Para el caso de perfil fijo se demuestra la igualdad con la suma por órdenes. El nuevo teorema de representación conserva además el dominio truncado exacto \eqref{eq:exactdomain}; no requiere un presupuesto global previo del procedimiento.
+
+No se incorporan como premisas los últimos intentos de caracterización mediante datos suficientes o decisiones sobre clases de funciones. En particular, el contraejemplo auxiliar con signos y polinomios discutido durante el trabajo no se presenta aquí como una iteración de Kung--Traub ni como una refutación de su conjetura.
+
+\subsection{Las cinco incorporaciones}
+\begin{longtable}{@{}p{.29\textwidth}p{.65\textwidth}@{}}
+\toprule
+Objeto & Formulación en la versión 3.3\\\midrule
+\endfirsthead
+\toprule Objeto & Formulación en la versión 3.3\\\midrule\endhead
+Evaluación utilizada & Definición~\ref{def:used}: adquisición indexada en un cálculo; registro y conteos por orden.\\[4pt]
+Cálculo y coste & Definición~\ref{def:calc}, Definición~\ref{def:realizedcost} y Lema~\ref{lem:costprofile}: procedimiento fijo, realización local y supremo total.\\[4pt]
+Representación exacta & Teorema~\ref{thm:exactrepresentation}: mismo registro, misma salida, mismas cuentas por orden y dominio truncado explícito. Proposición~\ref{prop:methodprocedure}: representación inversa.\\[4pt]
+Aplicación de la barrera & Teorema~\ref{thm:operationalbarrier}: representación, extensión total, función entera, restricción y contradicción. Corolario~\ref{cor:traub}: notación de Kung--Traub para el cálculo contado.\\[4pt]
+Separación histórica & Observación~\ref{rem:historical} y Apéndice~\ref{app:documentary}: el teorema operacional no se transforma por definición en una identificación histórica universal.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Correspondencia de resultados de la Sección 8}
+Los resultados de las Secciones 1--7 y 9 y de los Apéndices A y B conservan su numeración. En la Sección 8 cambia el orden lógico; la correspondencia es la siguiente.
+\begin{longtable}{@{}p{.29\textwidth}p{.65\textwidth}@{}}
+\toprule
+Referencia v3.2 & Referencia y tratamiento v3.3\\\midrule
+\endfirsthead
+\toprule Referencia v3.2 & Referencia y tratamiento v3.3\\\midrule\endhead
+Definición 8.1 & Definición~\ref{def:KTclass}: clase por etapas, separada del coste de realización.\\[3pt]
+Definición 8.2; Lema 8.3; Observación 8.4 & Lema~\ref{lem:projection} y Apéndice~\ref{app:costlogic}: factorización conjunta y dominio proyectado.\\[3pt]
+Definición 8.5; Lema 8.6 & Definición~\ref{def:stages}, Proposición~\ref{prop:stages} y Lema~\ref{lem:projection}.\\[3pt]
+Definición 8.7; Lema 8.8 & Definiciones~\ref{def:calc}, \ref{def:validcalc}; Lema~\ref{lem:calcunique}.\\[3pt]
+Lemas 8.9--8.10 & Teorema~\ref{thm:exactrepresentation}: la condición final del dominio realiza la truncación; se prueba también el recíproco de la correspondencia de ejecuciones.\\[3pt]
+Proposición 8.11 & Proposición~\ref{prop:stages}: estados, aplicaciones, inducción y conteo.\\[3pt]
+Corolario 8.12 & Proposición~\ref{prop:stages} aplicada a $S_j=\{0,\ldots,s_j\}$; el coste es $N_{\rm completo}$.\\[3pt]
+Lema 8.13 & Lema~\ref{lem:cache}: almacenamiento vacío al inicio y reducción de repeticiones.\\[3pt]
+Ejemplo 8.14 & Ejemplo~\ref{ex:operationalcounts}; su fórmula concreta de tres evaluaciones se conserva en el Apéndice~\ref{app:documentary}.\\[3pt]
+Definición 8.15 & Definición~\ref{def:realizedcost}: coste dependiente de realización y distinción entre supremo total y máximos por orden.\\[3pt]
+Proposición 8.16 & Teorema~\ref{thm:exactrepresentation}: igualdad de registros y cuentas, no sólo desigualdad de coste.\\[3pt]
+Observación 8.17 & Observación~\ref{rem:historical}.\\[3pt]
+Lema 8.18 & Lema~\ref{lem:rightbound}.\\[3pt]
+Corolario 8.19 & Teorema~\ref{thm:operationalbarrier}; admite una asignación con estimación local por la derecha sin exigir toda la estructura por etapas.\\[3pt]
+Corolario 8.20 & Corolario~\ref{cor:traub}, con el título explícito y la realización en el enunciado.\\[3pt]
+Observaciones 8.21--8.22 & Observación~\ref{rem:historical}, prueba del Teorema~\ref{thm:operationalbarrier} y Sección~\ref{sec:dependencies}.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Lo que esta revisión no afirma}
+No se ha probado la implicación adicional
+\[
+\phi\in\Omega_{\rm KT}\text{ y una lectura no realizada de }v(\phi)
+\Longrightarrow\exists\mathscr C\text{ con ese presupuesto}.
+\]
+Tampoco se la usa como premisa. La formalización adoptada cuenta un procedimiento que pertenece al objeto del teorema. Esta declaración sustituye las afirmaciones demasiado amplias que podían sugerir que definir una palabra bastaría para demostrar la equivalencia de modelos.
+
+\clearpage
+\section{Distinciones lógicas sobre coste y suficiencia}\label{app:costlogic}
+
+\subsection{La independencia aislada no implica omisión conjunta}
+\begin{example}[Dominio no producto]\label{ex:jointomission}
+Sean $D=\{(0,0),(1,1)\}$ y $u:D\to\R$, $u(a,b)=a$. Para un $a$ fijo hay a lo sumo un $b$ admisible, y recíprocamente. Así
+\[
+(a,b),(a,b')\in D\Longrightarrow u(a,b)=u(a,b'),
+\qquad
+(a,b),(a',b)\in D\Longrightarrow u(a,b)=u(a',b).
+\]
+Pero $u(0,0)=0\ne1=u(1,1)$. La proyección que elimina simultáneamente las dos coordenadas no tiene una factorización de $u$. La condición conjunta del Lema~\ref{lem:projection} no se deduce de las dos implicaciones aisladas.
+\end{example}
+
+\subsection{Mínimo entre procedimientos: una noción separada}
+\begin{definition}[Presupuestos uniformes admisibles]\label{def:mincost}
+Para una asignación $\phi$ se define
+\[
+\mathcal C_\phi=\{n\in\Nn:\exists\mathscr C,\mathcal U\text{ que realizan localmente }\phi,
+\ v(\phi,\mathscr C,\mathcal U)\le n\}.
+\]
+Si no es vacío, se define $v_{\min}(\phi)=\min\mathcal C_\phi$. Esta minimización sobre realizaciones distintas no es la definición de $v(\mathfrak C)$.
+\end{definition}
+
+\begin{proposition}[Existencia del mínimo uniforme]\label{prop:minattained}
+Si $\phi\in\Omega_{\rm KT}$, entonces $\mathcal C_\phi\ne\varnothing$ y existe una realización local con presupuesto $v_{\min}(\phi)$.
+\end{proposition}
+\begin{proof}
+\paso{1. Un presupuesto disponible.}
+En \eqref{eq:KTstages} tómense $S_j=\{0,\ldots,s_j\}$ y las mismas reglas $u_{j+1}$. Por la Proposición~\ref{prop:stages},
+\[
+N_{\rm completo}=\sum_{j<\ell}(s_j+1)\in\mathcal C_\phi.
+\]
+El conjunto local $\mathcal U$ se toma dentro del dominio donde existe la representación por etapas; su existencia está incluida en la Definición~\ref{def:KTclass}.
+\paso{2. Buen orden.}
+\[
+\varnothing\ne\mathcal C_\phi\subseteq\Nn
+\Longrightarrow n_*:=\min\mathcal C_\phi\in\mathcal C_\phi
+\Longrightarrow\exists\mathscr C,\mathcal U:\ v(\phi,\mathscr C,\mathcal U)\le n_*.
+\]
+La última implicación es la definición de pertenencia a $\mathcal C_\phi$. No se requiere un algoritmo que encuentre el mínimo.
+\end{proof}
+
+Si $v_{\min}(\phi)\ge1$, el Teorema~\ref{thm:operationalbarrier} y el Lema~\ref{lem:rightbound} dan
+\[
+p(\phi)\le2^{v_{\min}(\phi)-1}.
+\]
+Si el mínimo es cero, ese cálculo tiene también presupuesto uno y sólo se concluye por esta aplicación $p(\phi)\le1$. No se usa el Teorema~\ref{thm:main} con $d=0$. Esta variante no identifica $v_{\min}(\phi)$ con el $v(\phi)$ publicado.
+
+\subsection{Suficiencia elegida después del dato}
+\begin{example}[La mayoría de tres componentes]\label{ex:majority}
+Para $b=(b_1,b_2,b_3)\in\{0,1\}^3$, defínase
+\[
+M(b)=\begin{cases}1,&b_1+b_2+b_3\ge2,\\0,&b_1+b_2+b_3\le1.\end{cases}
+\]
+En este ejemplo una consulta elige $i\in\{1,2,3\}$ y recibe $b_i$. Para cada $b$ existen dos componentes que determinan $M(b)$, pero ningún procedimiento determinista de a lo sumo dos consultas calcula $M$ sobre todo $\{0,1\}^3$.
+\begin{proof}
+\paso{1. Suficiencia.}
+\[
+b\in\{0,1\}^3\Longrightarrow\exists i\ne j:\ b_i=b_j=:c
+\Longrightarrow M(b)=c
+\]
+para cualquiera de los dos valores de la tercera componente.
+\paso{2. Sin consultas.}
+\[
+M(0,0,0)=0\ne1=M(1,1,1).
+\]
+Una salida constante no calcula ambos valores.
+\paso{3. Primera respuesta.}
+Fijado el primer índice $i$, considérese la respuesta $b_i=0$. Si no se consulta otro índice, las completaciones
+\[
+(b_j,b_k)=(0,0)\quad\text{y}\quad(b_j,b_k)=(1,1)
+\]
+producen las mismas respuestas adquiridas y valores de mayoría cero y uno.
+\paso{4. Segundo índice distinto.}
+Si se consulta $j\ne i$, fíjese $b_j=1$ y sea $k$ el índice restante. Las completaciones
+\[
+(b_i,b_j,b_k)=(0,1,0)\quad\text{y}\quad(0,1,1)
+\]
+producen el mismo registro de dos respuestas y salidas requeridas distintas. Por determinismo no pueden calcularse ambas. Los casos anteriores agotan los procedimientos de presupuesto dos.
+\end{proof}
+El ejemplo no pertenece a la clase de iteraciones de raíces. Sólo distingue
+\[
+\forall b\ \exists\text{ dos datos suficientes para }b
+\qquad\text{de}\qquad
+\exists\mathscr C\ \forall b:\ N_{\mathscr C}(b)\le2.
+\]
+\end{example}
+
+\clearpage
+\section{Atribución histórica y lectura operacional}\label{app:documentary}
+
+\subsection{Material heredado de la versión 3.2}\label{subsec:KTsource}
+Este apéndice conserva y reorganiza el cotejo documental incluido en la versión 3.2; no declara una nueva auditoría bibliográfica independiente. Las referencias a páginas corresponden a las páginas impresas de las fuentes. Las construcciones de la Sección~\ref{sec:KT} son del manuscrito, no se atribuyen a esas fuentes.
+
+\begin{longtable}{@{}p{.29\textwidth}p{.65\textwidth}@{}}
+\toprule
+Fuente y localizador & Contenido que la v3.2 utiliza\\\midrule
+\endfirsthead
+\toprule Fuente y localizador & Contenido que la v3.2 utiliza\\\midrule\endhead
+\cite{KT1974}, p.~644, propiedad 4 y ecs.~(2.1)--(2.2)
+& Funciones de etapa fijadas para la iteración y comunes a los problemas; $u_0(x)=x$ en la convención adoptada.\\[3pt]
+\cite{KT1974}, p.~645, definición de $v_i$ y $v$
+& Conteo de evaluaciones por derivada y suma por paso. No se atribuye una definición explícita por estados ni una minimización entre algoritmos.\\[3pt]
+\cite{KT1974}, p.~645, Ejemplos 2.1--2.2
+& Conteos de Newton y de una fórmula de tres evaluaciones; distinción entre nodos, evaluaciones y repeticiones algebraicas.\\[3pt]
+\cite{KT1974}, pp.~647--648
+& Patrón de Jarratt; argumento de dependencia de una coordenada en el Teorema 6.1, dentro de su contexto de un punto; conteo por bloques para la clase de Hermite.\\[3pt]
+\cite{KT1974}, p.~649, Conjetura 8.1
+& Desigualdad $p(\phi)\le2^{v(\phi)-1}$ para la iteración sin memoria considerada.\\[3pt]
+\cite{KT1974}, pp.~650--651
+& Programas del apéndice; una aparición textual repetida no identifica por sí sola una adquisición nueva o una reutilización.\\[3pt]
+\cite{Traub1972}, pp.~168--169
+& Distinción entre adquisición y combinación de datos; antecedente documental, no definición sustitutiva de la clase ni del orden de 1974.\\
+\bottomrule
+\end{longtable}
+
+El fragmento de la definición reproducido en la v3.2 es: \emph{``number of evaluations of $f^{(i)}$ used to compute $\phi(f)(x)$''} \cite[p.~645]{KT1974}. En esta versión se fija el significado operacional de \emph{utilizada} mediante la Definición~\ref{def:used}, y se distingue esa elección de una prueba de equivalencia histórica.
+
+\subsection{La fórmula concreta de tres evaluaciones}
+Se conserva la fórmula que la v3.2 transcribe del Ejemplo 2.2 de \cite[p.~645]{KT1974}. Sean
+\[
+a=f(x),\quad b=f'(x),\quad y=x-a/b,\quad c=f(y),
+\qquad z=y-\frac{a^2c}{b(c-a)^2}.
+\]
+Los dominios y las reglas son
+\[
+W_0=\{(x,a,b):b\ne0\},\qquad \bar u_1(x,a,b)=x-a/b,
+\]
+\[
+W_1=\{(x,a,b,c):b\ne0,\ c\ne a\},\qquad
+\bar u_2(x,a,b,c)=x-a/b-\frac{a^2c}{b(c-a)^2}.
+\]
+Con $S_0=\{0,1\}$ y $S_1=\{0\}$, la Proposición~\ref{prop:stages} da
+\[
+(N_0,N_1,N)=(2,1,3).
+\]
+Las expresiones $a^2$ y $(c-a)^2$ combinan datos ya adquiridos. En una raíz puede añadirse, después de adquirir $a=0$, la salida $x$; esa rama utiliza una evaluación y no aumenta el presupuesto tres. Esta comprobación conserva el conteo y los dominios de la fórmula; no prueba su orden ni usa ese orden como premisa de la barrera.
+
+\subsection{Dos planos lógicos que no se identifican por definición}
+Para un cálculo fijo, la implicación demostrada es
+\[
+\mathfrak C=(\phi,\mathscr C,\mathcal U),\quad v(\mathfrak C)=n\ge1
+\Longrightarrow\nu_{T_{\mathscr C,n},f}=N_{\mathscr C}\le n
+\Longrightarrow p(\phi)\le2^{n-1}.
+\]
+La primera flecha corresponde al Teorema~\ref{thm:exactrepresentation}; la segunda, al Teorema~\ref{thm:operationalbarrier}. La inferencia no necesita una premisa bibliográfica.
+
+Para usar el símbolo publicado se identifica qué cálculo respalda su conteo:
+\[
+v(\phi)\ \text{designa}\ v(\phi;\mathscr C,\mathcal U).
+\]
+La evidencia documental heredada favorece un coste de evaluaciones del cálculo de una iteración. No convierte la igualdad anterior en una consecuencia de cualquier entero atribuido a $\phi$, ni demuestra por sí sola que toda lectura posible del texto original selecciona la misma clase formal.
+
+No se hace ninguna de las sustituciones
+\[
+\text{misma salida}\Rightarrow\text{mismo coste de cada realización},
+\qquad
+\forall f\ \exists\mathscr C_f\Rightarrow\exists\mathscr C\ \forall f,
+\]
+\[
+\sup_{\mathcal U}\sum_rN_r=\sum_r\sup_{\mathcal U}N_r,
+\qquad
+v(\phi)=v_{\min}(\phi),
+\]
+sin sus hipótesis adicionales. El Ejemplo~\ref{ex:operationalcounts}, el Ejemplo~\ref{ex:majority}, el Ejemplo~\ref{ex:branchcost} y la Definición~\ref{def:mincost}, respectivamente, explicitan esas diferencias.
+
+\subsection{Consecuencia para el título del corolario}
+El Corolario~\ref{cor:traub} se titula \emph{Conjetura Traub: formulación operacional}. Su enunciado contiene la realización contada. Es una consecuencia de la prueba propuesta del Teorema~\ref{thm:main}, no una prueba nueva e independiente de ella. El título no elimina las hipótesis y una aprobación externa no sustituye ninguna implicación matemática.
+
+\clearpage
+\begin{thebibliography}{9}
+\addcontentsline{toc}{section}{Referencias}
+\bibitem{KT1974}
+H.~T. Kung y J.~F. Traub,
+\emph{Optimal Order of One-Point and Multipoint Iteration},
+Journal of the ACM \textbf{21} (1974), núm.~4, 643--651.
+DOI: \href{https://doi.org/10.1145/321850.321860}{10.1145/321850.321860}.
+Copia citada en la versión 3.2:
+\url{https://www.eecs.harvard.edu/~htk/publication/1974-jacm-kung-traub.pdf}.
+Los localizadores documentales heredados se registran en el Apéndice~\ref{app:documentary}.
+\bibitem{Puente}
+\emph{Del esquema de Kung--Traub a un procedimiento fijo. Representación, argumentos omitidos y preservación del coste}.
+Nota de trabajo del proyecto, 17 de septiembre de 2026, 9 páginas. Material incorporado previamente a la v3.2 y reorganizado aquí. No es una publicación externa ni una auditoría independiente.
+\bibitem{Traub1972}
+J.~F. Traub,
+\emph{Computational Complexity of Iterative Processes},
+SIAM Journal on Computing \textbf{1} (1972), núm.~2, 167--179.
+Antecedente documental citado en la versión 3.2, pp.~168--169. No sustituye la definición de orden ni la clase de 1974.
+\bibitem{Base32}
+\emph{La cota $2^{d-1}$ para métodos escalares sin memoria}, versión 3.2 del manuscrito de trabajo, 18 de septiembre de 2026, 66 páginas.
+Archivo base: \texttt{Manuscrito\_Kung\_Traub\_v3\_2\_integrado.tex}.
+\end{thebibliography}
+\end{document}
